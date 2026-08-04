@@ -3,265 +3,290 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>執筆帖 — 作家活動記録</title>
+<title>執筆帖</title>
 
 <!-- ===== スマホでアプリのように開くための設定（PWA） ===== -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="執筆帖">
-<meta name="theme-color" content="#26241F">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%2326241F'/%3E%3Ctext x='90' y='118' font-size='84' text-anchor='middle' fill='%23F7F4EC' font-family='serif'%3E筆%3C/text%3E%3C/svg%3E">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%2326241F'/%3E%3Ctext x='32' y='44' font-size='32' text-anchor='middle' fill='%23F7F4EC' font-family='serif'%3E筆%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#F5F7F5">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23F5F7F5'/%3E%3Cpath d='M28 118 C 62 96 90 132 118 110 S 158 92 168 100' fill='none' stroke='%234E8B84' stroke-width='11' stroke-linecap='round'/%3E%3Cpath d='M28 138 C 62 116 90 152 118 130' fill='none' stroke='%23B8A990' stroke-width='5' stroke-dasharray='1 13' stroke-linecap='round'/%3E%3Cpath d='M96 46 C 116 38 132 48 150 40' fill='none' stroke='%234E8B84' stroke-opacity='.5' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23F5F7F5'/%3E%3Cpath d='M10 42 C 22 34 32 46 42 38 S 54 32 58 35' fill='none' stroke='%234E8B84' stroke-width='4.5' stroke-linecap='round'/%3E%3Cpath d='M34 17 C 42 14 48 18 54 15' fill='none' stroke='%234E8B84' stroke-opacity='.5' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E">
 <link id="manifest-link" rel="manifest" href="">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0"></script>
 
 <style>
 :root{
-  --paper:#F7F4EC;          /* 和紙 */
-  --paper-deep:#EFEADB;
-  --ink:#26241F;            /* 墨 */
-  --ink-soft:#4C483F;
-  --ai:#2C4A63;             /* 藍 */
-  --ai-deep:#213B50;
-  --shu:#B33A2B;            /* 朱 */
-  --shu-soft:rgba(179,58,43,.12);
-  --line:rgba(38,36,31,.14);
-  --grid:rgba(179,58,43,.16);
-  --radius:10px;
-  --serif:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --kiri:#F5F7F5;            /* 霧がかった生成り（背景） */
+  --shiro:#FFFFFF;
+  --sumi:#3A423F;            /* やわらかい墨色（文字） */
+  --sumi-soft:#6E7A76;
+  --kaze:#4E8B84;            /* 風 — 青緑 */
+  --kaze-deep:#3E736D;
+  --kaze-mist:rgba(78,139,132,.1);
+  --michi:#B8A990;           /* 道 — 砂色 */
+  --michi-soft:rgba(184,169,144,.16);
+  --aka:#D95F55;             /* 未達の赤 */
+  --aka-mist:rgba(217,95,85,.1);
+  --midori:#4E9C72;          /* 達成の緑 */
+  --line:rgba(58,66,63,.1);
+  --radius:18px;
+  --shadow:0 2px 14px rgba(58,66,63,.06);
+  --maru:"Zen Maru Gothic","Hiragino Maru Gothic ProN",sans-serif;
   --gothic:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN",sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html{font-size:16px}
 body{
   font-family:var(--gothic);
-  background:var(--paper);
-  color:var(--ink);
+  background:var(--kiri);
+  color:var(--sumi);
   min-height:100dvh;
-  background-image:
-    linear-gradient(var(--grid) 1px, transparent 1px);
-  background-size:100% 2.2rem;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 800' preserveAspectRatio='xMidYMax slice'%3E%3Cpath d='M-50 620 C 250 560 420 700 700 640 S 1100 560 1300 620' fill='none' stroke='%234E8B84' stroke-opacity='.08' stroke-width='70' stroke-linecap='round'/%3E%3Cpath d='M-50 660 C 250 600 420 740 700 680 S 1100 600 1300 660' fill='none' stroke='%23B8A990' stroke-opacity='.12' stroke-width='3' stroke-dasharray='1 14' stroke-linecap='round'/%3E%3Cpath d='M780 120 C 880 90 960 130 1060 100' fill='none' stroke='%234E8B84' stroke-opacity='.12' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M820 160 C 900 135 970 165 1040 145' fill='none' stroke='%234E8B84' stroke-opacity='.08' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E");
   background-attachment:fixed;
+  background-size:cover;
 }
 button{font-family:inherit;cursor:pointer}
-input,select,textarea{font-family:inherit;font-size:1rem;color:var(--ink)}
+input,select,textarea{font-family:inherit;font-size:1rem;color:var(--sumi)}
 
 /* ===== 共通部品 ===== */
 .card{
-  background:rgba(255,255,255,.72);
-  border:1px solid var(--line);
+  background:var(--shiro);
+  border:none;
   border-radius:var(--radius);
-  padding:1.1rem 1.2rem;
+  padding:1.25rem 1.3rem;
   margin-bottom:1rem;
-  backdrop-filter:blur(2px);
+  box-shadow:var(--shadow);
 }
 .card h2{
-  font-family:var(--serif);font-weight:600;font-size:1.05rem;
-  margin-bottom:.9rem;display:flex;align-items:center;gap:.55rem;
+  font-family:var(--maru);font-weight:700;font-size:1.02rem;
+  margin-bottom:1rem;display:flex;align-items:center;gap:.55rem;color:var(--sumi);
 }
-.card h2::before{content:"";display:inline-block;width:.55rem;height:.55rem;background:var(--shu);border-radius:1px;transform:rotate(45deg)}
-.field{margin-bottom:.85rem}
-.field label{display:block;font-size:.8rem;color:var(--ink-soft);margin-bottom:.3rem;letter-spacing:.06em}
+.card h2::before{content:"";display:inline-block;width:1.1rem;height:.3rem;background:var(--kaze);border-radius:99px;opacity:.85}
+.field{margin-bottom:.9rem}
+.field label{display:block;font-size:.78rem;color:var(--sumi-soft);margin-bottom:.35rem;letter-spacing:.05em}
 .field input,.field select,.field textarea{
-  width:100%;padding:.65rem .75rem;border:1px solid var(--line);
-  border-radius:8px;background:#fff;outline:none;
+  width:100%;padding:.7rem .85rem;border:1.5px solid var(--line);
+  border-radius:12px;background:var(--kiri);outline:none;transition:border-color .15s, background .15s;
 }
-.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--ai);box-shadow:0 0 0 3px rgba(44,74,99,.15)}
+.field textarea{resize:vertical;line-height:1.8}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--kaze);background:#fff;box-shadow:0 0 0 3px var(--kaze-mist)}
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:.4rem;
-  padding:.7rem 1.3rem;border-radius:8px;border:1px solid transparent;
-  font-size:.95rem;font-weight:600;letter-spacing:.05em;transition:filter .15s;
+  padding:.75rem 1.4rem;border-radius:999px;border:1.5px solid transparent;
+  font-size:.93rem;font-weight:700;letter-spacing:.04em;transition:filter .15s, transform .1s;
 }
-.btn:hover{filter:brightness(1.08)}
-.btn:focus-visible{outline:2px solid var(--ai);outline-offset:2px}
-.btn-primary{background:var(--ai);color:#fff}
-.btn-shu{background:var(--shu);color:#fff}
-.btn-ghost{background:transparent;border-color:var(--line);color:var(--ink-soft)}
+.btn:hover{filter:brightness(1.05)}
+.btn:active{transform:scale(.98)}
+.btn:focus-visible{outline:2px solid var(--kaze);outline-offset:2px}
+.btn-primary{background:var(--kaze);color:#fff}
+.btn-shu{background:var(--sumi);color:#fff}
+.btn-ghost{background:transparent;border-color:var(--line);color:var(--sumi-soft)}
 .btn-block{width:100%}
-.btn-sm{padding:.35rem .7rem;font-size:.8rem;border-radius:6px}
+.btn-sm{padding:.38rem .8rem;font-size:.78rem}
 .tag{
-  display:inline-block;font-size:.7rem;padding:.15rem .5rem;border-radius:999px;
-  border:1px solid var(--line);color:var(--ink-soft);background:#fff;
+  display:inline-block;font-size:.7rem;padding:.18rem .6rem;border-radius:999px;
+  border:none;color:var(--kaze-deep);background:var(--kaze-mist);font-weight:500;
 }
-.tag-haiku{border-color:var(--shu);color:var(--shu);background:var(--shu-soft)}
-.muted{color:var(--ink-soft);font-size:.85rem}
-.err{color:var(--shu);font-size:.85rem;margin-top:.5rem;min-height:1.2em}
-.ok{color:var(--ai);font-size:.85rem;margin-top:.5rem}
+.tag-haiku{color:var(--aka);background:var(--aka-mist)}
+.muted{color:var(--sumi-soft);font-size:.85rem}
+.err{color:var(--aka);font-size:.85rem;margin-top:.5rem;min-height:1.2em}
+.ok{color:var(--midori);font-size:.85rem;margin-top:.5rem}
 .hidden{display:none!important}
 
 /* ===== ログイン画面 ===== */
-#auth-screen{
-  min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:1.5rem;
-}
+#auth-screen{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:1.5rem}
 .auth-box{width:100%;max-width:400px}
 .auth-title{
-  font-family:var(--serif);text-align:center;margin-bottom:1.6rem;
+  font-family:var(--maru);text-align:center;margin-bottom:1.8rem;
+  font-size:2.4rem;font-weight:700;letter-spacing:.3em;text-indent:.3em;color:var(--sumi);
 }
-.auth-title .main{font-size:2.6rem;font-weight:800;letter-spacing:.35em;text-indent:.35em;display:block}
-.auth-title .sub{font-size:.8rem;color:var(--ink-soft);letter-spacing:.25em;display:block;margin-top:.4rem}
-.auth-tabs{display:flex;margin-bottom:1rem;border-bottom:1px solid var(--line)}
+.auth-tabs{display:flex;margin-bottom:1.1rem;background:var(--kiri);border-radius:999px;padding:.25rem}
 .auth-tabs button{
-  flex:1;background:none;border:none;padding:.6rem;font-size:.9rem;color:var(--ink-soft);
-  border-bottom:2px solid transparent;
+  flex:1;background:none;border:none;padding:.55rem;font-size:.88rem;color:var(--sumi-soft);
+  border-radius:999px;transition:background .15s;
 }
-.auth-tabs button.active{color:var(--ink);border-bottom-color:var(--shu);font-weight:700}
-.master-note{
-  margin-top:1rem;text-align:center;font-size:.75rem;color:var(--ink-soft);
-}
+.auth-tabs button.active{color:var(--kaze-deep);background:#fff;font-weight:700;box-shadow:0 1px 5px rgba(58,66,63,.08)}
+.master-note{margin-top:1rem;text-align:center;font-size:.75rem;color:var(--sumi-soft)}
 
-/* ===== アプリ本体 ===== */
-#app-screen{padding-bottom:calc(4.6rem + env(safe-area-inset-bottom))}
+/* ===== トップバー ===== */
 .topbar{
-  position:sticky;top:0;z-index:20;
-  background:var(--ink);color:var(--paper);
-  padding:calc(.7rem + env(safe-area-inset-top)) 1rem .7rem;
-  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(245,247,245,.92);backdrop-filter:blur(8px);
+  padding:calc(.65rem + env(safe-area-inset-top)) .95rem .55rem;
+  display:flex;align-items:center;justify-content:space-between;gap:.6rem;
 }
-.topbar .brand{font-family:var(--serif);font-weight:600;font-size:1.15rem;letter-spacing:.3em}
-.topbar .who{font-size:.72rem;opacity:.85;display:flex;align-items:center;gap:.5rem}
-.master-badge{
-  background:var(--shu);color:#fff;font-size:.65rem;padding:.1rem .45rem;border-radius:3px;letter-spacing:.1em;
-}
-.topbar button{background:none;border:1px solid rgba(247,244,236,.4);color:var(--paper);border-radius:6px;padding:.25rem .6rem;font-size:.75rem}
-main{max-width:760px;margin:0 auto;padding:1.2rem 1rem 2rem}
+.brand-wrap{display:flex;flex-direction:column;gap:.12rem;min-width:0}
+.brand{font-family:var(--maru);font-weight:700;font-size:1.15rem;letter-spacing:.26em;line-height:1.2;color:var(--sumi)}
+.who{font-size:.66rem;color:var(--sumi-soft);display:flex;align-items:center;gap:.4rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.master-badge{background:var(--michi);color:#fff;font-size:.6rem;padding:.08rem .4rem;border-radius:99px;letter-spacing:.08em;flex-shrink:0}
+.top-right{display:flex;align-items:center;gap:.5rem;flex-shrink:0}
+.topbar .lo{background:none;border:1.5px solid var(--line);color:var(--sumi-soft);border-radius:999px;padding:.28rem .65rem;font-size:.7rem}
 
-/* 下部タブ（スマホアプリ風） */
+/* 今日の進捗バッジ */
+.goal-badge{
+  border:none;border-radius:14px;padding:.4rem .75rem;color:#fff;
+  background:var(--aka);text-align:right;line-height:1.15;min-width:5.4rem;
+  transition:background .3s;box-shadow:var(--shadow);
+}
+.goal-badge.met{background:var(--midori)}
+.goal-badge.none{background:#fff;color:var(--sumi-soft);border:1.5px solid var(--line);box-shadow:none}
+.goal-badge .g-num{font-family:var(--maru);font-weight:700;font-size:1.02rem;display:block}
+.goal-badge .g-num small{font-size:.62rem;font-weight:400;margin-left:.1rem}
+.goal-badge .g-sub{font-size:.58rem;opacity:.92;display:block;letter-spacing:.03em}
+
+/* 上部タブ */
 .tabbar{
-  position:fixed;left:0;right:0;bottom:0;z-index:30;
-  background:var(--ink);
-  display:flex;
-  padding-bottom:env(safe-area-inset-bottom);
-  border-top:1px solid rgba(247,244,236,.15);
+  position:sticky;top:0;z-index:30;
+  background:rgba(245,247,245,.92);backdrop-filter:blur(8px);
+  display:flex;gap:.3rem;padding:.45rem .6rem .6rem;
+  border-bottom:1px solid var(--line);
 }
 .tabbar button{
-  flex:1;background:none;border:none;color:rgba(247,244,236,.6);
-  padding:.6rem 0 .55rem;font-size:.7rem;letter-spacing:.08em;
-  display:flex;flex-direction:column;align-items:center;gap:.2rem;
+  flex:1;background:none;border:none;color:var(--sumi-soft);
+  padding:.55rem 0;font-size:.84rem;letter-spacing:.06em;
+  font-family:var(--maru);font-weight:500;border-radius:999px;
+  transition:background .15s,color .15s;
 }
-.tabbar button .glyph{font-family:var(--serif);font-size:1.25rem;line-height:1}
-.tabbar button.active{color:var(--paper)}
-.tabbar button.active .glyph{color:var(--shu-bright,#E8836F)}
-.tabbar button.active::after{content:"";width:1.4rem;height:2px;background:var(--shu);margin-top:.15rem}
+.tabbar button.active{color:#fff;background:var(--kaze);font-weight:700}
+main{max-width:760px;margin:0 auto;padding:1.4rem 1rem 3rem}
 
-/* ページ見出し（縦書きの署名要素） */
-.page-head{display:flex;align-items:flex-start;gap:.9rem;margin-bottom:1.1rem}
-.page-head .v{
-  writing-mode:vertical-rl;font-family:var(--serif);font-weight:800;font-size:1.5rem;
-  letter-spacing:.3em;border-left:2px solid var(--shu);padding-left:.5rem;min-height:5.2rem;
+.page-title{
+  font-family:var(--maru);font-size:1.3rem;font-weight:700;letter-spacing:.18em;
+  padding-bottom:.55rem;margin-bottom:1.15rem;display:inline-block;color:var(--sumi);
+  background:linear-gradient(to right, var(--michi) 0 2px, transparent 2px 12px) bottom left/12px 3px repeat-x;
 }
-.page-head .desc{font-size:.82rem;color:var(--ink-soft);padding-top:.3rem;line-height:1.9}
+
+/* 目標カード */
+.goal-card{display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap}
+.goal-bars{flex:1;min-width:12rem;display:flex;flex-direction:column;gap:.8rem}
+.gbar-row .gbar-top{display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:.32rem;color:var(--sumi-soft)}
+.gbar-row .gbar-top b{font-family:var(--maru);font-size:.95rem;color:var(--sumi)}
+.gbar{height:9px;border-radius:99px;background:var(--michi-soft);overflow:hidden}
+.gbar span{display:block;height:100%;border-radius:99px;background:var(--aka);transition:width .4s ease}
+.gbar span.met{background:var(--midori)}
 
 /* 記録リスト */
 .rec-list{list-style:none}
 .rec-list li{
   display:flex;align-items:center;justify-content:space-between;gap:.6rem;
-  padding:.65rem .2rem;border-bottom:1px dashed var(--line);
+  padding:.7rem .2rem;border-bottom:1px solid var(--line);
 }
 .rec-list li:last-child{border-bottom:none}
-.rec-main{display:flex;flex-direction:column;gap:.15rem;min-width:0}
-.rec-main .t1{font-weight:600;font-size:.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rec-main .t2{font-size:.75rem;color:var(--ink-soft)}
-.rec-amt{font-family:var(--serif);font-weight:600;white-space:nowrap}
-.rec-amt small{font-size:.7rem;color:var(--ink-soft);margin-left:.15rem}
+.rec-main{display:flex;flex-direction:column;gap:.22rem;min-width:0}
+.rec-main .t1{font-weight:700;font-size:.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rec-amt{font-family:var(--maru);font-weight:700;white-space:nowrap}
+.rec-amt small{font-size:.7rem;color:var(--sumi-soft);margin-left:.15rem}
 
 /* 統計 */
-.period-tabs{display:flex;gap:.4rem;margin-bottom:1rem;flex-wrap:wrap}
+.period-tabs{display:flex;gap:.35rem;margin-bottom:1rem;background:#fff;border-radius:999px;padding:.28rem;box-shadow:var(--shadow)}
 .period-tabs button{
-  flex:1;min-width:4.5rem;padding:.5rem 0;border-radius:8px;border:1px solid var(--line);
-  background:#fff;color:var(--ink-soft);font-size:.85rem;letter-spacing:.1em;
+  flex:1;min-width:4rem;padding:.5rem 0;border-radius:999px;border:none;
+  background:none;color:var(--sumi-soft);font-size:.84rem;letter-spacing:.08em;transition:background .15s,color .15s;
 }
-.period-tabs button.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.period-tabs button.active{background:var(--kaze);color:#fff;font-weight:700}
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-bottom:1rem}
-.stat-cell{
-  background:rgba(255,255,255,.72);border:1px solid var(--line);border-radius:var(--radius);
-  padding:.8rem .9rem;position:relative;overflow:hidden;
-}
-.stat-cell.haiku{border-color:var(--shu);background:linear-gradient(rgba(179,58,43,.05),rgba(179,58,43,.05)),rgba(255,255,255,.72)}
-.stat-cell .lbl{font-size:.7rem;color:var(--ink-soft);letter-spacing:.1em}
-.stat-cell .num{font-family:var(--serif);font-size:1.55rem;font-weight:800;margin-top:.2rem}
-.stat-cell .num small{font-size:.75rem;font-weight:400;color:var(--ink-soft);margin-left:.2rem}
+.stat-cell{background:#fff;border:none;border-radius:var(--radius);padding:.9rem 1rem;box-shadow:var(--shadow)}
+.stat-cell.haiku{background:linear-gradient(var(--aka-mist),var(--aka-mist)),#fff}
+.stat-cell .lbl{font-size:.68rem;color:var(--sumi-soft);letter-spacing:.08em}
+.stat-cell .num{font-family:var(--maru);font-size:1.5rem;font-weight:700;margin-top:.25rem}
+.stat-cell .num small{font-size:.72rem;font-weight:400;color:var(--sumi-soft);margin-left:.2rem}
 .chart-wrap{position:relative;height:260px}
 .list-table{width:100%;border-collapse:collapse;font-size:.88rem}
-.list-table th{
-  text-align:left;font-size:.72rem;color:var(--ink-soft);font-weight:500;
-  padding:.4rem .3rem;border-bottom:1px solid var(--line);letter-spacing:.08em;
-}
-.list-table td{padding:.55rem .3rem;border-bottom:1px dashed var(--line)}
-.list-table td.num{text-align:right;font-family:var(--serif);font-weight:600;white-space:nowrap}
+.list-table th{text-align:left;font-size:.7rem;color:var(--sumi-soft);font-weight:500;padding:.4rem .3rem;border-bottom:1.5px solid var(--line);letter-spacing:.08em}
+.list-table td{padding:.6rem .3rem;border-bottom:1px solid var(--line)}
+.list-table td.num{text-align:right;font-family:var(--maru);font-weight:700;white-space:nowrap}
 .list-table tr:last-child td{border-bottom:none}
 
 /* 書斎 */
-.work-item{
-  display:flex;align-items:center;justify-content:space-between;gap:.6rem;
-  padding:.75rem .2rem;border-bottom:1px dashed var(--line);
-}
+.work-item{display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding:.85rem .2rem;border-bottom:1px solid var(--line)}
 .work-item:last-child{border-bottom:none}
 .work-item .info{min-width:0}
-.work-item .name{font-family:var(--serif);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.work-item .meta{font-size:.75rem;color:var(--ink-soft);margin-top:.15rem}
-.work-actions{display:flex;gap:.35rem;flex-shrink:0}
+.work-item .name{font-family:var(--maru);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.work-item .meta{font-size:.75rem;color:var(--sumi-soft);margin-top:.3rem;display:flex;align-items:center;gap:.55rem;flex-wrap:wrap}
+.work-actions{display:flex;gap:.35rem;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
+.cm-count{color:var(--kaze-deep);font-weight:700}
+.today-add{color:var(--midori);font-weight:700}
 
 /* コメント */
-.comment-item{padding:.7rem 0;border-bottom:1px dashed var(--line)}
+.comment-item{padding:.8rem 0;border-bottom:1px solid var(--line)}
 .comment-item:last-child{border-bottom:none}
-.comment-item .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:.3rem}
-.comment-item .when{font-size:.72rem;color:var(--ink-soft)}
+.comment-item .head{display:flex;justify-content:space-between;align-items:center;gap:.5rem;margin-bottom:.38rem}
+.comment-item .src{display:flex;align-items:center;gap:.45rem;min-width:0;flex-wrap:wrap}
+.comment-item .wname{font-family:var(--maru);font-weight:700;font-size:.9rem}
+.comment-item .when{font-size:.72rem;color:var(--sumi-soft)}
 .comment-item .body{font-size:.92rem;line-height:1.9;white-space:pre-wrap}
+
+/* 管理 */
+.acc-item{padding:.9rem .2rem;border-bottom:1px solid var(--line)}
+.acc-item:last-child{border-bottom:none}
+.acc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:.6rem}
+.acc-mail{font-weight:700;font-size:.92rem;overflow-wrap:anywhere}
+.acc-meta{font-size:.74rem;color:var(--sumi-soft);margin-top:.32rem;display:flex;gap:.8rem;flex-wrap:wrap}
+.acc-stats{font-size:.8rem;margin-top:.48rem;display:flex;gap:1rem;flex-wrap:wrap}
+.acc-stats b{font-family:var(--maru)}
+.badge-stop{background:var(--aka-mist);color:var(--aka);font-size:.65rem;padding:.12rem .5rem;border-radius:99px}
+.badge-self{background:var(--kaze-mist);color:var(--kaze-deep);font-size:.65rem;padding:.12rem .5rem;border-radius:99px}
+
+/* モーダル */
+.modal-back{position:fixed;inset:0;z-index:60;background:rgba(58,66,63,.35);backdrop-filter:blur(2px);display:flex;align-items:flex-end;justify-content:center}
+.modal{
+  background:var(--kiri);width:100%;max-width:560px;max-height:88dvh;overflow-y:auto;
+  border-radius:22px 22px 0 0;padding:1.3rem 1.3rem calc(1.3rem + env(safe-area-inset-bottom));
+}
+.modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:.6rem;margin-bottom:1rem}
+.modal-head .t{font-family:var(--maru);font-weight:700;font-size:1.05rem}
+.modal-head .s{font-size:.75rem;color:var(--sumi-soft);margin-top:.28rem}
+.modal-close{background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:.32rem .75rem;font-size:.78rem;color:var(--sumi-soft)}
+.modal h3{font-size:.78rem;color:var(--sumi-soft);letter-spacing:.06em;margin:1.25rem 0 .45rem;font-weight:500}
+.modal .field input,.modal .field textarea{background:#fff}
 
 /* 設定案内 */
 #setup-screen{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:1.5rem}
 .setup-box{max-width:640px;width:100%}
-.setup-box pre{
-  background:var(--ink);color:var(--paper);border-radius:8px;padding:1rem;
-  font-size:.75rem;overflow-x:auto;line-height:1.7;margin:.6rem 0 1rem;
-}
-.setup-box h1{font-family:var(--serif);font-size:1.4rem;margin-bottom:.8rem}
+.setup-box pre{background:var(--sumi);color:var(--kiri);border-radius:12px;padding:1rem;font-size:.75rem;overflow-x:auto;line-height:1.7;margin:.6rem 0 1rem}
+.setup-box h1{font-family:var(--maru);font-size:1.35rem;margin-bottom:.8rem}
 .setup-box ol{padding-left:1.3rem;line-height:2}
 
 @media (min-width:700px){
   .stat-grid{grid-template-columns:repeat(4,1fr)}
   .chart-wrap{height:320px}
+  .modal-back{align-items:center;padding:1.5rem}
+  .modal{border-radius:22px}
 }
-@media (prefers-reduced-motion:reduce){
-  *{transition:none!important;animation:none!important}
-}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
 
-<!-- ============ 初期設定案内（Supabase未設定時） ============ -->
+<!-- ============ 初期設定案内 ============ -->
 <div id="setup-screen" class="hidden">
   <div class="setup-box card">
     <h1>執筆帖 — 初期設定</h1>
-    <p class="muted">このアプリを使うには、Supabase プロジェクトの接続情報を設定してください。</p>
+    <p class="muted">Supabase プロジェクトの接続情報を設定してください。</p>
     <ol>
-      <li><a href="https://supabase.com" target="_blank" rel="noopener">supabase.com</a> で無料プロジェクトを作成</li>
-      <li>SQL Editor で、同梱の <b>setup.sql</b>（テーブル作成スクリプト）を実行</li>
-      <li>Authentication → Providers → Email を有効化（確認メールは任意）</li>
-      <li>Project Settings → API から <b>Project URL</b> と <b>anon public key</b> を取得</li>
-      <li>この HTML ファイルをテキストエディタで開き、先頭付近の
+      <li><a href="https://supabase.com" target="_blank" rel="noopener">supabase.com</a> でプロジェクトを作成</li>
+      <li>SQL Editor で、同梱の <b>setup.sql</b> を実行</li>
+      <li>Authentication → Providers → Email を有効化</li>
+      <li>Project Settings → API から Project URL と公開キーを取得</li>
+      <li>この HTML ファイルの先頭付近を書き換えて保存
         <pre>const SUPABASE_URL  = "ここにProject URL";
-const SUPABASE_ANON = "ここにanon key";</pre>
-        を書き換えて保存</li>
+const SUPABASE_ANON = "ここに公開キー";</pre>
+      </li>
     </ol>
-    <p class="muted">設定後にこのページを再読み込みすると、ログイン画面が表示されます。</p>
   </div>
 </div>
 
 <!-- ============ ログイン画面 ============ -->
 <div id="auth-screen" class="hidden">
   <div class="auth-box">
-    <div class="auth-title">
-      <span class="main">執筆帖</span>
-      <span class="sub">— 作家活動の記録 —</span>
-    </div>
+    <div class="auth-title">執筆帖</div>
     <div class="card">
       <div class="auth-tabs">
         <button id="tab-login" class="active" type="button">ログイン</button>
@@ -285,27 +310,47 @@ const SUPABASE_ANON = "ここにanon key";</pre>
 <!-- ============ アプリ本体 ============ -->
 <div id="app-screen" class="hidden">
   <header class="topbar">
-    <span class="brand">執筆帖</span>
-    <span class="who">
-      <span id="who-email"></span>
-      <span id="who-master" class="master-badge hidden">マスター</span>
-      <button id="btn-logout" type="button">ログアウト</button>
-    </span>
+    <div class="brand-wrap">
+      <span class="brand">執筆帖</span>
+      <span class="who">
+        <span id="who-email"></span>
+        <span id="who-master" class="master-badge hidden">マスター</span>
+      </span>
+    </div>
+    <div class="top-right">
+      <button id="goal-badge" class="goal-badge none" type="button" title="今日の目標を設定">
+        <span class="g-num" id="gb-num">0<small>字</small></span>
+        <span class="g-sub" id="gb-sub">目標を設定</span>
+      </button>
+      <button id="btn-logout" class="lo" type="button">ログアウト</button>
+    </div>
   </header>
+
+  <nav class="tabbar">
+    <button data-page="record" class="active" type="button">記録する</button>
+    <button data-page="works" type="button">書斎</button>
+    <button data-page="stats" type="button">統計</button>
+    <button data-page="comments" type="button">コメント</button>
+    <button data-page="admin" id="tab-admin" class="hidden" type="button">管理</button>
+  </nav>
 
   <main>
     <!-- ===== 記録する ===== -->
     <section id="page-record">
-      <div class="page-head">
-        <div class="v">記録する</div>
-        <p class="desc">今日書いた文字数を作品ごとに記します。<br>俳句は句数で記録されます。</p>
-      </div>
+      <h1 class="page-title">記録する</h1>
+
       <div class="card">
-        <h2>本日の筆</h2>
-        <div class="field">
-          <label for="rec-date">日付</label>
-          <input id="rec-date" type="date">
+        <h2>今日の目標</h2>
+        <div class="goal-card">
+          <div class="goal-bars" id="goal-bars">
+            <p class="muted" id="goal-none">目標がまだありません。設定すると進み具合が出ます。</p>
+          </div>
         </div>
+        <button id="btn-open-goal" class="btn btn-ghost btn-block" type="button" style="margin-top:.9rem">目標を設定する</button>
+      </div>
+
+      <div class="card">
+        <h2>本日の執筆</h2>
         <div class="field">
           <label for="rec-work">作品</label>
           <select id="rec-work"></select>
@@ -317,8 +362,9 @@ const SUPABASE_ANON = "ここにanon key";</pre>
         <button id="btn-save-record" class="btn btn-shu btn-block" type="button">記録する</button>
         <p id="rec-msg" class="err"></p>
       </div>
+
       <div class="card">
-        <h2>この日の記録</h2>
+        <h2>本日の記録</h2>
         <ul id="rec-today-list" class="rec-list"></ul>
         <p id="rec-today-empty" class="muted">まだ記録がありません。</p>
       </div>
@@ -326,12 +372,9 @@ const SUPABASE_ANON = "ここにanon key";</pre>
 
     <!-- ===== 書斎 ===== -->
     <section id="page-works" class="hidden">
-      <div class="page-head">
-        <div class="v">書斎</div>
-        <p class="desc">作品を並べる棚。六つの項目から選び、<br>作品を登録・整理します。</p>
-      </div>
+      <h1 class="page-title">書斎</h1>
       <div class="card">
-        <h2>新しい作品を置く</h2>
+        <h2>新しい作品をつくる</h2>
         <div class="field">
           <label for="work-name">作品名</label>
           <input id="work-name" type="text" placeholder="例：北の紀行、冬の句帖 …">
@@ -347,22 +390,19 @@ const SUPABASE_ANON = "ここにanon key";</pre>
             <option value="俳句">俳句（句数で記録）</option>
           </select>
         </div>
-        <button id="btn-add-work" class="btn btn-primary btn-block" type="button">書斎に置く</button>
+        <button id="btn-add-work" class="btn btn-primary btn-block" type="button">作品をつくる</button>
         <p id="work-msg" class="err"></p>
       </div>
       <div class="card">
-        <h2>棚の作品</h2>
+        <h2>作品一覧</h2>
         <div id="works-list"></div>
-        <p id="works-empty" class="muted">まだ作品がありません。上から登録してください。</p>
+        <p id="works-empty" class="muted">まだ作品がありません。上からつくってください。</p>
       </div>
     </section>
 
     <!-- ===== 統計 ===== -->
     <section id="page-stats" class="hidden">
-      <div class="page-head">
-        <div class="v">統計</div>
-        <p class="desc">筆の歩みを数字と図で眺めます。<br>文字数と句数は分けて集計します。</p>
-      </div>
+      <h1 class="page-title">統計</h1>
       <div class="period-tabs" id="period-tabs">
         <button data-p="week" class="active" type="button">週</button>
         <button data-p="month" type="button">月</button>
@@ -375,7 +415,7 @@ const SUPABASE_ANON = "ここにanon key";</pre>
           <div class="num" id="st-char-total">0<small>字</small></div>
         </div>
         <div class="stat-cell">
-          <div class="lbl">文字数 一日平均（執筆日）</div>
+          <div class="lbl">文字数 一日平均</div>
           <div class="num" id="st-char-avg">0<small>字</small></div>
         </div>
         <div class="stat-cell haiku">
@@ -383,7 +423,7 @@ const SUPABASE_ANON = "ここにanon key";</pre>
           <div class="num" id="st-haiku-total">0<small>句</small></div>
         </div>
         <div class="stat-cell haiku">
-          <div class="lbl">俳句 一日平均（執筆日）</div>
+          <div class="lbl">俳句 一日平均</div>
           <div class="num" id="st-haiku-avg">0<small>句</small></div>
         </div>
       </div>
@@ -411,97 +451,176 @@ const SUPABASE_ANON = "ここにanon key";</pre>
 
     <!-- ===== コメント ===== -->
     <section id="page-comments" class="hidden">
-      <div class="page-head">
-        <div class="v">コメント</div>
-        <p class="desc">作品ごとの覚え書き。進み具合や着想、<br>推敲の跡を残します。</p>
+      <h1 class="page-title">コメント</h1>
+      <div class="card">
+        <h2>絞り込み</h2>
+        <div class="field" style="margin-bottom:0">
+          <select id="cm-filter"></select>
+        </div>
       </div>
       <div class="card">
-        <h2>作品を選ぶ</h2>
-        <div class="field">
-          <select id="cm-work"></select>
-        </div>
-        <div class="field">
-          <label for="cm-body">コメント</label>
-          <textarea id="cm-body" rows="4" placeholder="この作品についての覚え書き…"></textarea>
-        </div>
-        <button id="btn-add-comment" class="btn btn-primary btn-block" type="button">書き残す</button>
-        <p id="cm-msg" class="err"></p>
-      </div>
-      <div class="card">
-        <h2>覚え書き一覧</h2>
+        <h2>一覧</h2>
         <div id="comments-list"></div>
-        <p id="comments-empty" class="muted">この作品にはまだコメントがありません。</p>
+        <p id="comments-empty" class="muted">まだコメントがありません。書斎の各作品から書き残せます。</p>
+      </div>
+    </section>
+
+    <!-- ===== 管理（マスターのみ） ===== -->
+    <section id="page-admin" class="hidden">
+      <h1 class="page-title">管理</h1>
+      <div class="stat-grid">
+        <div class="stat-cell">
+          <div class="lbl">アカウント数</div>
+          <div class="num" id="ad-users">0</div>
+        </div>
+        <div class="stat-cell">
+          <div class="lbl">作品数</div>
+          <div class="num" id="ad-works">0</div>
+        </div>
+        <div class="stat-cell">
+          <div class="lbl">総文字数</div>
+          <div class="num" id="ad-chars">0<small>字</small></div>
+        </div>
+        <div class="stat-cell haiku">
+          <div class="lbl">総句数</div>
+          <div class="num" id="ad-haiku">0<small>句</small></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>アカウント一覧</h2>
+        <div id="acc-list"></div>
+        <p id="acc-empty" class="muted">アカウントを読み込めませんでした。setup.sql を最新版で実行済みかご確認ください。</p>
+      </div>
+      <div class="card">
+        <h2>アカウントの削除について</h2>
+        <p class="muted">完全な削除は Supabase ダッシュボードの Authentication → Users から行えます。ここで停止したアカウントは、ログインはできますが記録やコメントを新しく保存できなくなります。</p>
       </div>
     </section>
   </main>
+</div>
 
-  <nav class="tabbar">
-    <button data-page="record" class="active" type="button"><span class="glyph">筆</span>記録する</button>
-    <button data-page="works" type="button"><span class="glyph">棚</span>書斎</button>
-    <button data-page="stats" type="button"><span class="glyph">図</span>統計</button>
-    <button data-page="comments" type="button"><span class="glyph">註</span>コメント</button>
-  </nav>
+<!-- ============ 目標設定モーダル ============ -->
+<div id="goal-modal" class="modal-back hidden">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="goal-modal-title">
+    <div class="modal-head">
+      <div>
+        <div class="t" id="goal-modal-title">今日の目標</div>
+        <div class="s" id="goal-modal-sub"></div>
+      </div>
+      <button class="modal-close" id="goal-modal-close" type="button">閉じる</button>
+    </div>
+    <div class="field">
+      <label for="goal-chars">文字数の目標（字）</label>
+      <input id="goal-chars" type="number" min="0" step="100" inputmode="numeric" placeholder="例：2000">
+    </div>
+    <div class="field">
+      <label for="goal-haiku">句数の目標（句）</label>
+      <input id="goal-haiku" type="number" min="0" step="1" inputmode="numeric" placeholder="例：3">
+    </div>
+    <p class="muted" style="margin-bottom:.9rem">使わないほうは空欄か 0 のままで構いません。</p>
+    <button id="goal-modal-save" class="btn btn-primary btn-block" type="button">目標を決める</button>
+    <button id="goal-modal-clear" class="btn btn-ghost btn-block" type="button" style="margin-top:.5rem">目標を取り消す</button>
+    <p id="goal-modal-msg" class="err"></p>
+  </div>
+</div>
+
+<!-- ============ 記録追加モーダル（書斎から） ============ -->
+<div id="rec-modal" class="modal-back hidden">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="rec-modal-title">
+    <div class="modal-head">
+      <div>
+        <div class="t" id="rec-modal-title"></div>
+        <div class="s" id="rec-modal-sub"></div>
+      </div>
+      <button class="modal-close" id="rec-modal-close" type="button">閉じる</button>
+    </div>
+    <div class="field">
+      <label for="rec-modal-amount" id="rec-modal-label">文字数</label>
+      <input id="rec-modal-amount" type="number" min="0" step="1" inputmode="numeric" placeholder="0">
+    </div>
+    <button id="rec-modal-save" class="btn btn-shu btn-block" type="button">記録する</button>
+    <p id="rec-modal-msg" class="err"></p>
+    <h3>本日この作品に記録した分</h3>
+    <ul id="rec-modal-list" class="rec-list"></ul>
+    <p id="rec-modal-empty" class="muted">まだありません。</p>
+  </div>
+</div>
+
+<!-- ============ コメント入力モーダル（書斎から） ============ -->
+<div id="cm-modal" class="modal-back hidden">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="cm-modal-title">
+    <div class="modal-head">
+      <div>
+        <div class="t" id="cm-modal-title"></div>
+        <div class="s" id="cm-modal-sub"></div>
+      </div>
+      <button class="modal-close" id="cm-modal-close" type="button">閉じる</button>
+    </div>
+    <div class="field">
+      <label for="cm-modal-body">コメント</label>
+      <textarea id="cm-modal-body" rows="4" placeholder="この作品についての覚え書き…"></textarea>
+    </div>
+    <button id="cm-modal-save" class="btn btn-primary btn-block" type="button">書き残す</button>
+    <p id="cm-modal-msg" class="err"></p>
+    <h3>この作品のコメント</h3>
+    <div id="cm-modal-list"></div>
+    <p id="cm-modal-empty" class="muted">まだコメントがありません。</p>
+  </div>
 </div>
 
 <script>
 /* =====================================================================
-   ▼▼▼ Supabase 接続設定（ここを書き換えてください） ▼▼▼
+   ▼ Supabase 接続設定
    ===================================================================== */
 const SUPABASE_URL  = "https://tstbqfkwnpntabdmksfm.supabase.co";
 const SUPABASE_ANON = "sb_publishable_26nApeSSefrof6QEa0YIhA_vZ6fYqtr";
 /* ===================================================================== */
 
 const MASTER_EMAIL = "michihari.natori.note@gmail.com";
+const CATEGORIES = ["小説","紀行文","哲学","論文","詩","俳句"];
 
 /* 他プロジェクトと同じSupabaseを共用するためのテーブル接頭辞。
    setup.sql のテーブル名と必ず一致させてください。 */
 const PFX = "shippitsu_";
-const T_WORKS = PFX + "works", T_RECORDS = PFX + "records", T_COMMENTS = PFX + "comments";
-const CATEGORIES = ["小説","紀行文","哲学","論文","詩","俳句"];
+const T_WORKS = PFX+"works", T_RECORDS = PFX+"records", T_COMMENTS = PFX+"comments",
+      T_GOALS = PFX+"goals", T_PROFILES = PFX+"profiles";
 
-/* ---- PWAマニフェスト（インライン生成：ホーム画面追加でアプリ風に） ---- */
+/* ---- PWAマニフェスト ---- */
 (function(){
+  const icon = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='110' fill='%23F5F7F5'/%3E%3Cpath d='M80 336 C 176 272 256 376 336 312 S 448 260 476 284' fill='none' stroke='%234E8B84' stroke-width='30' stroke-linecap='round'/%3E%3Cpath d='M80 392 C 176 328 256 432 336 368' fill='none' stroke='%23B8A990' stroke-width='14' stroke-dasharray='2 38' stroke-linecap='round'/%3E%3Cpath d='M272 130 C 328 108 372 136 424 112' fill='none' stroke='%234E8B84' stroke-opacity='.5' stroke-width='17' stroke-linecap='round'/%3E%3C/svg%3E";
   const manifest = {
-    name:"執筆帖 — 作家活動記録", short_name:"執筆帖",
-    display:"standalone", start_url:".", scope:".",
-    background_color:"#F7F4EC", theme_color:"#26241F",
-    icons:[{src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%2326241F'/%3E%3Ctext x='256' y='330' font-size='240' text-anchor='middle' fill='%23F7F4EC' font-family='serif'%3E筆%3C/text%3E%3C/svg%3E",
-      sizes:"512x512", type:"image/svg+xml", purpose:"any"}]
+    name:"執筆帖", short_name:"執筆帖", display:"standalone", start_url:".", scope:".",
+    background_color:"#F5F7F5", theme_color:"#F5F7F5",
+    icons:[{src:icon, sizes:"512x512", type:"image/svg+xml", purpose:"any"}]
   };
-  const blob = new Blob([JSON.stringify(manifest)],{type:"application/json"});
-  document.getElementById("manifest-link").href = URL.createObjectURL(blob);
+  document.getElementById("manifest-link").href =
+    URL.createObjectURL(new Blob([JSON.stringify(manifest)],{type:"application/json"}));
 })();
 
 /* ---- ユーティリティ ---- */
 const $ = id => document.getElementById(id);
 const fmt = n => Number(n||0).toLocaleString("ja-JP");
-const todayStr = () => {
-  const d = new Date();
-  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
-};
+const dstr = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const todayStr = () => dstr(new Date());
 const esc = s => String(s??"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const unitOf = cat => cat==="俳句" ? "句" : "字";
+const whenStr = t => new Date(t).toLocaleString("ja-JP",{year:"numeric",month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"});
+const dayStr  = t => new Date(t).toLocaleDateString("ja-JP",{year:"numeric",month:"numeric",day:"numeric"});
 
 let sb = null, currentUser = null, isMaster = false;
 let works = [], chart = null, currentPeriod = "week";
+let commentCounts = {}, todayByWork = {};
+let todayGoal = null, todayChars = 0, todayHaiku = 0;
+let modalWorkId = null, recModalWorkId = null;
 
 /* ---- 起動 ---- */
 window.addEventListener("DOMContentLoaded", async () => {
-  if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_")) {
-    $("setup-screen").classList.remove("hidden");
-    return;
-  }
+  if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_")) { $("setup-screen").classList.remove("hidden"); return; }
   sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
-  $("rec-date").value = todayStr();
-
   bindAuth(); bindApp();
-
   const { data:{ session } } = await sb.auth.getSession();
   if (session) enterApp(session.user); else $("auth-screen").classList.remove("hidden");
-
-  sb.auth.onAuthStateChange((_e, session) => {
-    if (!session && currentUser) location.reload();
-  });
+  sb.auth.onAuthStateChange((_e, session) => { if (!session && currentUser) location.reload(); });
 });
 
 /* =====================================================================
@@ -522,10 +641,8 @@ function setAuthMode(m){
   $("auth-msg").textContent = "";
 }
 async function doAuth(){
-  const email = $("auth-email").value.trim();
-  const password = $("auth-pass").value;
-  const msg = $("auth-msg");
-  msg.textContent = "";
+  const email = $("auth-email").value.trim(), password = $("auth-pass").value;
+  const msg = $("auth-msg"); msg.className="err"; msg.textContent = "";
   if (!email || !password){ msg.textContent = "メールアドレスとパスワードを入力してください。"; return; }
   $("auth-submit").disabled = true;
   try{
@@ -536,15 +653,11 @@ async function doAuth(){
     } else {
       const { data, error } = await sb.auth.signUp({ email, password });
       if (error) throw error;
-      if (data.session){ enterApp(data.user); }
-      else { msg.className = "ok"; msg.textContent = "確認メールを送信しました。メール内のリンクを開いてからログインしてください。"; }
+      if (data.session) enterApp(data.user);
+      else { msg.className="ok"; msg.textContent = "確認メールを送信しました。メール内のリンクを開いてからログインしてください。"; }
     }
-  }catch(e){
-    msg.className = "err";
-    msg.textContent = translateAuthError(e.message);
-  }finally{
-    $("auth-submit").disabled = false;
-  }
+  }catch(e){ msg.className="err"; msg.textContent = translateAuthError(e.message); }
+  finally{ $("auth-submit").disabled = false; }
 }
 function translateAuthError(m){
   if (/Invalid login credentials/i.test(m)) return "メールアドレスまたはパスワードが違います。";
@@ -560,27 +673,40 @@ async function enterApp(user){
   $("app-screen").classList.remove("hidden");
   $("who-email").textContent = user.email;
   $("who-master").classList.toggle("hidden", !isMaster);
+  $("tab-admin").classList.toggle("hidden", !isMaster);
   await loadWorks();
-  await renderTodayList();
+  await refreshToday();
 }
 
 /* =====================================================================
-   アプリ共通
+   共通
    ===================================================================== */
 function bindApp(){
   $("btn-logout").onclick = async () => { await sb.auth.signOut(); location.reload(); };
-
-  document.querySelectorAll(".tabbar button").forEach(b => {
-    b.onclick = () => showPage(b.dataset.page);
-  });
+  document.querySelectorAll(".tabbar button").forEach(b => { b.onclick = () => showPage(b.dataset.page); });
 
   $("btn-save-record").onclick = saveRecord;
-  $("rec-date").onchange = renderTodayList;
   $("rec-work").onchange = updateAmountLabel;
-
   $("btn-add-work").onclick = addWork;
-  $("btn-add-comment").onclick = addComment;
-  $("cm-work").onchange = renderComments;
+  $("cm-filter").onchange = renderComments;
+
+  $("goal-badge").onclick = openGoalModal;
+  $("btn-open-goal").onclick = openGoalModal;
+  $("goal-modal-close").onclick = () => closeModal("goal-modal");
+  $("goal-modal-save").onclick = saveGoal;
+  $("goal-modal-clear").onclick = clearGoal;
+
+  $("rec-modal-close").onclick = () => closeModal("rec-modal");
+  $("rec-modal-save").onclick = saveModalRecord;
+  $("cm-modal-close").onclick = () => closeModal("cm-modal");
+  $("cm-modal-save").onclick = saveModalComment;
+
+  ["goal-modal","rec-modal","cm-modal"].forEach(id => {
+    $(id).addEventListener("click", e => { if (e.target === $(id)) closeModal(id); });
+  });
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") ["goal-modal","rec-modal","cm-modal"].forEach(closeModal);
+  });
 
   document.querySelectorAll("#period-tabs button").forEach(b => {
     b.onclick = () => {
@@ -590,31 +716,177 @@ function bindApp(){
     };
   });
 }
+function closeModal(id){
+  $(id).classList.add("hidden");
+  if (document.querySelectorAll(".modal-back:not(.hidden)").length === 0) document.body.style.overflow = "";
+}
+function openModal(id){ $(id).classList.remove("hidden"); document.body.style.overflow = "hidden"; }
+
 function showPage(p){
-  ["record","works","stats","comments"].forEach(k => {
-    $("page-"+k).classList.toggle("hidden", k!==p);
-  });
+  ["record","works","stats","comments","admin"].forEach(k => $("page-"+k).classList.toggle("hidden", k!==p));
   document.querySelectorAll(".tabbar button").forEach(b => b.classList.toggle("active", b.dataset.page===p));
   if (p==="stats") renderStats();
   if (p==="comments") renderComments();
+  if (p==="works") renderWorksList();
+  if (p==="admin") renderAdmin();
   window.scrollTo({top:0});
+}
+
+/* =====================================================================
+   今日の集計・目標
+   ===================================================================== */
+async function refreshToday(){
+  const today = todayStr();
+  const [recRes, goalRes] = await Promise.all([
+    sb.from(T_RECORDS).select(`id, amount, work_id, works:${T_WORKS}(name, category)`)
+      .eq("date", today).eq("user_id", currentUser.id).order("created_at",{ascending:true}),
+    sb.from(T_GOALS).select("*").eq("date", today).eq("user_id", currentUser.id).maybeSingle()
+  ]);
+  const rows = recRes.data || [];
+  todayChars = 0; todayHaiku = 0; todayByWork = {};
+  rows.forEach(r => {
+    const haiku = r.works && r.works.category === "俳句";
+    if (haiku) todayHaiku += r.amount; else todayChars += r.amount;
+    todayByWork[r.work_id] = (todayByWork[r.work_id]||0) + r.amount;
+  });
+  todayGoal = goalRes.error ? null : (goalRes.data || null);
+  renderTodayList(rows);
+  renderGoalBadge();
+  renderGoalBars();
+}
+function goalMet(){
+  if (!todayGoal) return false;
+  const tc = todayGoal.target_chars || 0, th = todayGoal.target_haiku || 0;
+  if (!tc && !th) return false;
+  return (!tc || todayChars >= tc) && (!th || todayHaiku >= th);
+}
+function renderGoalBadge(){
+  const b = $("goal-badge");
+  const hasGoal = todayGoal && ((todayGoal.target_chars||0) > 0 || (todayGoal.target_haiku||0) > 0);
+  const showHaiku = todayHaiku > 0 || (todayGoal && (todayGoal.target_haiku||0) > 0);
+  $("gb-num").innerHTML = fmt(todayChars) + "<small>字</small>" +
+    (showHaiku ? " / " + fmt(todayHaiku) + "<small>句</small>" : "");
+  b.classList.remove("met","none");
+  if (!hasGoal){ b.classList.add("none"); $("gb-sub").textContent = "目標を設定"; return; }
+  if (goalMet()){ b.classList.add("met"); $("gb-sub").textContent = "目標達成"; return; }
+  const parts = [];
+  if (todayGoal.target_chars) parts.push("あと" + fmt(Math.max(0, todayGoal.target_chars - todayChars)) + "字");
+  if (todayGoal.target_haiku) parts.push("あと" + fmt(Math.max(0, todayGoal.target_haiku - todayHaiku)) + "句");
+  $("gb-sub").textContent = parts.join(" ");
+}
+function renderGoalBars(){
+  const box = $("goal-bars");
+  const tc = todayGoal ? (todayGoal.target_chars||0) : 0;
+  const th = todayGoal ? (todayGoal.target_haiku||0) : 0;
+  if (!tc && !th){
+    box.innerHTML = `<p class="muted">目標がまだありません。設定すると進み具合が出ます。</p>`;
+    return;
+  }
+  const bar = (label, cur, target, unit) => {
+    const pct = target ? Math.min(100, Math.round(cur/target*100)) : 0;
+    const met = cur >= target;
+    return `<div class="gbar-row">
+      <div class="gbar-top">
+        <span>${label}</span>
+        <span><b>${fmt(cur)}</b> / ${fmt(target)} ${unit}　${pct}%</span>
+      </div>
+      <div class="gbar"><span class="${met?"met":""}" style="width:${pct}%"></span></div>
+    </div>`;
+  };
+  let html = "";
+  if (tc) html += bar("文字数", todayChars, tc, "字");
+  if (th) html += bar("句数", todayHaiku, th, "句");
+  box.innerHTML = html;
+}
+function openGoalModal(){
+  $("goal-modal-sub").textContent = dayStr(new Date());
+  $("goal-chars").value = todayGoal && todayGoal.target_chars ? todayGoal.target_chars : "";
+  $("goal-haiku").value = todayGoal && todayGoal.target_haiku ? todayGoal.target_haiku : "";
+  $("goal-modal-msg").textContent = "";
+  openModal("goal-modal");
+}
+async function saveGoal(){
+  const msg = $("goal-modal-msg"); msg.className="err"; msg.textContent="";
+  const tc = parseInt($("goal-chars").value,10) || 0;
+  const th = parseInt($("goal-haiku").value,10) || 0;
+  if (tc <= 0 && th <= 0){ msg.textContent = "文字数か句数のどちらかに目標を入れてください。"; return; }
+  const { error } = await sb.from(T_GOALS).upsert(
+    { user_id: currentUser.id, date: todayStr(), target_chars: tc, target_haiku: th },
+    { onConflict: "user_id,date" });
+  if (error){ msg.textContent = "保存できませんでした：" + error.message; return; }
+  await refreshToday();
+  closeModal("goal-modal");
+}
+async function clearGoal(){
+  const { error } = await sb.from(T_GOALS).delete().eq("user_id", currentUser.id).eq("date", todayStr());
+  if (error){ $("goal-modal-msg").textContent = "取り消せませんでした：" + error.message; return; }
+  await refreshToday();
+  closeModal("goal-modal");
+}
+
+/* =====================================================================
+   記録する
+   ===================================================================== */
+async function saveRecord(){
+  const msg = $("rec-msg"); msg.className="err"; msg.textContent = "";
+  const workId = $("rec-work").value;
+  const amount = parseInt($("rec-amount").value, 10);
+  if (!workId){ msg.textContent = "作品を選んでください。まだ無ければ書斎でつくれます。"; return; }
+  if (!(amount >= 0)){ msg.textContent = "数を入力してください。"; return; }
+  const { error } = await sb.from(T_RECORDS).insert({ user_id: currentUser.id, work_id: workId, date: todayStr(), amount });
+  if (error){ msg.textContent = translateWriteError(error.message); return; }
+  const w = works.find(x=>x.id===workId);
+  msg.className = "ok";
+  msg.textContent = `記録しました：${w?w.name:""} ${fmt(amount)}${unitOf(w?w.category:"")}`;
+  $("rec-amount").value = "";
+  await refreshToday();
+}
+function translateWriteError(m){
+  if (/row-level security|violates row-level/i.test(m))
+    return "保存できませんでした。アカウントが停止されているか、setup.sql が未実行の可能性があります。";
+  return "保存できませんでした：" + m;
+}
+function renderTodayList(rows){
+  $("rec-today-empty").classList.toggle("hidden", rows.length>0);
+  $("rec-today-list").innerHTML = rows.map(r => {
+    const nm = r.works ? r.works.name : "（削除済の作品）";
+    const cat = r.works ? r.works.category : "";
+    return `<li>
+      <div class="rec-main">
+        <span class="t1">${esc(nm)}</span>
+        <span><span class="tag ${cat==="俳句"?"tag-haiku":""}">${esc(cat)}</span></span>
+      </div>
+      <span class="rec-amt">${fmt(r.amount)}<small>${unitOf(cat)}</small></span>
+      <button class="btn btn-ghost btn-sm" onclick="deleteRecord('${r.id}')">取消</button>
+    </li>`;
+  }).join("");
+}
+async function deleteRecord(id){
+  if (!confirm("この記録を取り消しますか？")) return;
+  const { error } = await sb.from(T_RECORDS).delete().eq("id", id);
+  if (error){ alert("取消できませんでした：" + error.message); return; }
+  await refreshToday();
+  if (!$("rec-modal").classList.contains("hidden")) await renderRecModalList();
+  await renderWorksList();
 }
 
 /* =====================================================================
    書斎（作品管理）
    ===================================================================== */
 async function loadWorks(){
-  const { data, error } = await sb.from(T_WORKS).select("*").order("created_at",{ascending:true});
+  const { data, error } = await sb.from(T_WORKS).select("*")
+    .eq("user_id", currentUser.id).order("created_at",{ascending:true});
   if (error){ console.error(error); return; }
   works = data || [];
   fillWorkSelects();
-  renderWorksList();
+  await renderWorksList();
 }
 function fillWorkSelects(){
   const opts = works.map(w => `<option value="${w.id}">${esc(w.name)}（${esc(w.category)}）</option>`).join("");
-  const ph = `<option value="">— 作品を選択 —</option>`;
-  $("rec-work").innerHTML = ph + opts;
-  $("cm-work").innerHTML = ph + opts;
+  $("rec-work").innerHTML = `<option value="">— 作品を選択 —</option>` + opts;
+  const cur = $("cm-filter").value;
+  $("cm-filter").innerHTML = `<option value="">すべての作品</option>` + opts;
+  if (cur) $("cm-filter").value = cur;
   updateAmountLabel();
 }
 function updateAmountLabel(){
@@ -624,12 +896,11 @@ function updateAmountLabel(){
   $("rec-amount").placeholder = haiku ? "例：3（句）" : "例：1200（字）";
 }
 async function addWork(){
-  const name = $("work-name").value.trim();
-  const category = $("work-cat").value;
-  const msg = $("work-msg"); msg.textContent = "";
+  const name = $("work-name").value.trim(), category = $("work-cat").value;
+  const msg = $("work-msg"); msg.className="err"; msg.textContent = "";
   if (!name){ msg.textContent = "作品名を入力してください。"; return; }
   const { error } = await sb.from(T_WORKS).insert({ user_id: currentUser.id, name, category });
-  if (error){ msg.textContent = "保存できませんでした：" + error.message; return; }
+  if (error){ msg.textContent = translateWriteError(error.message); return; }
   $("work-name").value = "";
   await loadWorks();
 }
@@ -637,25 +908,35 @@ async function renderWorksList(){
   const box = $("works-list");
   $("works-empty").classList.toggle("hidden", works.length>0);
   if (!works.length){ box.innerHTML=""; return; }
-
-  const { data: recs } = await sb.from(T_RECORDS).select("work_id, amount");
+  const [{ data: recs }, { data: cms }] = await Promise.all([
+    sb.from(T_RECORDS).select("work_id, amount").eq("user_id", currentUser.id),
+    sb.from(T_COMMENTS).select("work_id").eq("user_id", currentUser.id)
+  ]);
   const totals = {};
   (recs||[]).forEach(r => totals[r.work_id] = (totals[r.work_id]||0) + r.amount);
+  commentCounts = {};
+  (cms||[]).forEach(c => commentCounts[c.work_id] = (commentCounts[c.work_id]||0) + 1);
 
-  box.innerHTML = works.map(w => `
-    <div class="work-item">
+  box.innerHTML = works.map(w => {
+    const n = commentCounts[w.id] || 0, t = todayByWork[w.id] || 0;
+    return `<div class="work-item">
       <div class="info">
         <div class="name">${esc(w.name)}</div>
         <div class="meta">
           <span class="tag ${w.category==="俳句"?"tag-haiku":""}">${esc(w.category)}</span>
-          　累計 ${fmt(totals[w.id]||0)} ${unitOf(w.category)}
+          <span>累計 ${fmt(totals[w.id]||0)} ${unitOf(w.category)}</span>
+          ${t ? `<span class="today-add">本日 ${fmt(t)} ${unitOf(w.category)}</span>` : ""}
+          ${n ? `<span class="cm-count">コメント ${n}</span>` : ""}
         </div>
       </div>
       <div class="work-actions">
+        <button class="btn btn-shu btn-sm" onclick="openRecModal('${w.id}')">${w.category==="俳句"?"句数を追加":"文字数を追加"}</button>
+        <button class="btn btn-ghost btn-sm" onclick="openCommentModal('${w.id}')">コメント</button>
         <button class="btn btn-ghost btn-sm" onclick="renameWork('${w.id}')">改題</button>
         <button class="btn btn-ghost btn-sm" onclick="deleteWork('${w.id}')">削除</button>
       </div>
-    </div>`).join("");
+    </div>`;
+  }).join("");
 }
 async function renameWork(id){
   const w = works.find(x=>x.id===id); if(!w) return;
@@ -671,85 +952,146 @@ async function deleteWork(id){
   const { error } = await sb.from(T_WORKS).delete().eq("id", id);
   if (error){ alert("削除できませんでした：" + error.message); return; }
   await loadWorks();
-  await renderTodayList();
+  await refreshToday();
+}
+
+/* ---- 書斎からの記録追加 ---- */
+async function openRecModal(workId){
+  const w = works.find(x=>x.id===workId); if(!w) return;
+  recModalWorkId = workId;
+  $("rec-modal-title").textContent = w.name;
+  $("rec-modal-sub").textContent = w.category + "　" + dayStr(new Date());
+  $("rec-modal-label").textContent = w.category==="俳句" ? "句数" : "文字数";
+  $("rec-modal-amount").value = "";
+  $("rec-modal-amount").placeholder = w.category==="俳句" ? "例：3" : "例：1200";
+  $("rec-modal-msg").textContent = "";
+  openModal("rec-modal");
+  await renderRecModalList();
+  $("rec-modal-amount").focus();
+}
+async function renderRecModalList(){
+  const { data } = await sb.from(T_RECORDS).select("id, amount")
+    .eq("work_id", recModalWorkId).eq("date", todayStr()).order("created_at",{ascending:true});
+  const rows = data || [];
+  const w = works.find(x=>x.id===recModalWorkId);
+  $("rec-modal-empty").classList.toggle("hidden", rows.length>0);
+  $("rec-modal-list").innerHTML = rows.map(r => `<li>
+      <div class="rec-main"><span class="t1">${fmt(r.amount)} ${unitOf(w?w.category:"")}</span></div>
+      <button class="btn btn-ghost btn-sm" onclick="deleteRecord('${r.id}')">取消</button>
+    </li>`).join("");
+}
+async function saveModalRecord(){
+  const msg = $("rec-modal-msg"); msg.className="err"; msg.textContent="";
+  const amount = parseInt($("rec-modal-amount").value,10);
+  if (!(amount >= 0)){ msg.textContent = "数を入力してください。"; return; }
+  const { error } = await sb.from(T_RECORDS).insert(
+    { user_id: currentUser.id, work_id: recModalWorkId, date: todayStr(), amount });
+  if (error){ msg.textContent = translateWriteError(error.message); return; }
+  const w = works.find(x=>x.id===recModalWorkId);
+  msg.className="ok"; msg.textContent = `記録しました：${fmt(amount)}${unitOf(w?w.category:"")}`;
+  $("rec-modal-amount").value = "";
+  await refreshToday();
+  await renderRecModalList();
+  await renderWorksList();
 }
 
 /* =====================================================================
-   記録する
+   コメント
    ===================================================================== */
-async function saveRecord(){
-  const msg = $("rec-msg"); msg.className="err"; msg.textContent = "";
-  const date = $("rec-date").value;
-  const workId = $("rec-work").value;
-  const amount = parseInt($("rec-amount").value, 10);
-  if (!date){ msg.textContent = "日付を選んでください。"; return; }
-  if (!workId){ msg.textContent = "作品を選んでください。まだ無ければ「書斎」で登録できます。"; return; }
-  if (!(amount >= 0)){ msg.textContent = "数を入力してください。"; return; }
-  const { error } = await sb.from(T_RECORDS).insert({ user_id: currentUser.id, work_id: workId, date, amount });
-  if (error){ msg.textContent = "保存できませんでした：" + error.message; return; }
-  const w = works.find(x=>x.id===workId);
-  msg.className = "ok";
-  msg.textContent = `記録しました：${w?w.name:""} ${fmt(amount)}${unitOf(w?w.category:"")}`;
-  $("rec-amount").value = "";
-  renderTodayList();
+async function openCommentModal(workId){
+  const w = works.find(x=>x.id===workId); if(!w) return;
+  modalWorkId = workId;
+  $("cm-modal-title").textContent = w.name;
+  $("cm-modal-sub").textContent = w.category;
+  $("cm-modal-body").value = "";
+  $("cm-modal-msg").textContent = "";
+  openModal("cm-modal");
+  await renderModalComments();
+  $("cm-modal-body").focus();
 }
-async function renderTodayList(){
-  const date = $("rec-date").value || todayStr();
-  const { data, error } = await sb.from(T_RECORDS)
-    .select(`id, amount, work_id, works:${T_WORKS}(name, category)`)
-    .eq("date", date).order("created_at",{ascending:true});
-  const list = $("rec-today-list");
+async function renderModalComments(){
+  const { data, error } = await sb.from(T_COMMENTS).select("*")
+    .eq("work_id", modalWorkId).order("created_at",{ascending:false});
   if (error){ console.error(error); return; }
   const rows = data || [];
-  $("rec-today-empty").classList.toggle("hidden", rows.length>0);
-  list.innerHTML = rows.map(r => {
-    const nm = r.works ? r.works.name : "（削除済の作品）";
-    const cat = r.works ? r.works.category : "";
-    return `<li>
-      <div class="rec-main">
-        <span class="t1">${esc(nm)}</span>
-        <span class="t2"><span class="tag ${cat==="俳句"?"tag-haiku":""}">${esc(cat)}</span></span>
+  $("cm-modal-empty").classList.toggle("hidden", rows.length>0);
+  $("cm-modal-list").innerHTML = rows.map(c => `
+    <div class="comment-item">
+      <div class="head">
+        <span class="when">${whenStr(c.created_at)}</span>
+        <button class="btn btn-ghost btn-sm" onclick="deleteComment('${c.id}', true)">削除</button>
       </div>
-      <span class="rec-amt">${fmt(r.amount)}<small>${unitOf(cat)}</small></span>
-      <button class="btn btn-ghost btn-sm" onclick="deleteRecord('${r.id}')">取消</button>
-    </li>`;
-  }).join("");
+      <div class="body">${esc(c.body)}</div>
+    </div>`).join("");
 }
-async function deleteRecord(id){
-  if (!confirm("この記録を取り消しますか？")) return;
-  const { error } = await sb.from(T_RECORDS).delete().eq("id", id);
-  if (error){ alert("取消できませんでした：" + error.message); return; }
-  renderTodayList();
+async function saveModalComment(){
+  const msg = $("cm-modal-msg"); msg.className="err"; msg.textContent = "";
+  const body = $("cm-modal-body").value.trim();
+  if (!body){ msg.textContent = "コメントを入力してください。"; return; }
+  const { error } = await sb.from(T_COMMENTS).insert({ user_id: currentUser.id, work_id: modalWorkId, body });
+  if (error){ msg.textContent = translateWriteError(error.message); return; }
+  $("cm-modal-body").value = "";
+  msg.className="ok"; msg.textContent = "書き残しました。";
+  await renderModalComments();
+  await renderWorksList();
+}
+async function deleteComment(id, inModal){
+  if (!confirm("このコメントを削除しますか？")) return;
+  const { error } = await sb.from(T_COMMENTS).delete().eq("id", id);
+  if (error){ alert("削除できませんでした：" + error.message); return; }
+  if (inModal){ await renderModalComments(); await renderWorksList(); }
+  else { await renderComments(); }
+}
+async function renderComments(){
+  const filter = $("cm-filter").value;
+  let q = sb.from(T_COMMENTS).select(`id, body, created_at, work_id, works:${T_WORKS}(name, category)`)
+    .eq("user_id", currentUser.id);
+  if (filter) q = q.eq("work_id", filter);
+  const { data, error } = await q.order("created_at",{ascending:false});
+  if (error){ console.error(error); return; }
+  const rows = data || [];
+  $("comments-empty").classList.toggle("hidden", rows.length>0);
+  $("comments-list").innerHTML = rows.map(c => {
+    const nm = c.works ? c.works.name : "（削除済の作品）";
+    const cat = c.works ? c.works.category : "";
+    return `<div class="comment-item">
+      <div class="head">
+        <span class="src">
+          <span class="wname">${esc(nm)}</span>
+          ${cat ? `<span class="tag ${cat==="俳句"?"tag-haiku":""}">${esc(cat)}</span>` : ""}
+          <span class="when">${whenStr(c.created_at)}</span>
+        </span>
+        <button class="btn btn-ghost btn-sm" onclick="deleteComment('${c.id}', false)">削除</button>
+      </div>
+      <div class="body">${esc(c.body)}</div>
+    </div>`;
+  }).join("");
 }
 
 /* =====================================================================
    統計
    ===================================================================== */
 function periodRange(p){
-  const now = new Date(); now.setHours(0,0,0,0);
-  const d = new Date(now);
+  const d = new Date(); d.setHours(0,0,0,0);
   if (p==="week"){ d.setDate(d.getDate()-6); return d; }
   if (p==="month"){ d.setDate(d.getDate()-29); return d; }
   if (p==="year"){ d.setFullYear(d.getFullYear()-1); d.setDate(d.getDate()+1); return d; }
-  return null; // 全体
-}
-function dstr(d){
-  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  return null;
 }
 async function renderStats(){
-  let q = sb.from(T_RECORDS).select(`date, amount, work_id, works:${T_WORKS}(name, category)`);
+  let q = sb.from(T_RECORDS).select(`date, amount, work_id, works:${T_WORKS}(name, category)`)
+    .eq("user_id", currentUser.id);
   const from = periodRange(currentPeriod);
   if (from) q = q.gte("date", dstr(from));
   const { data, error } = await q.order("date",{ascending:true});
   if (error){ console.error(error); return; }
   const rows = (data||[]).map(r => ({
-    date: r.date, amount: r.amount,
+    date:r.date, amount:r.amount,
     name: r.works ? r.works.name : "（削除済）",
     category: r.works ? r.works.category : "その他",
     haiku: r.works ? r.works.category === "俳句" : false
   }));
 
-  /* --- 合計・一日平均（文字と句を分離） --- */
   let charTotal=0, haikuTotal=0;
   const charDays = new Set(), haikuDays = new Set();
   rows.forEach(r => {
@@ -761,7 +1103,6 @@ async function renderStats(){
   $("st-char-avg").innerHTML  = fmt(charDays.size ? Math.round(charTotal/charDays.size) : 0) + "<small>字</small>";
   $("st-haiku-avg").innerHTML = fmt(haikuDays.size ? Math.round(haikuTotal*10/haikuDays.size)/10 : 0) + "<small>句</small>";
 
-  /* --- グラフ用に日別/月別へ集計 --- */
   const byMonth = (currentPeriod==="year" || currentPeriod==="all");
   const keyOf = d => byMonth ? d.slice(0,7) : d;
   const buckets = {};
@@ -770,7 +1111,6 @@ async function renderStats(){
     buckets[k] = buckets[k] || { c:0, h:0 };
     if (r.haiku) buckets[k].h += r.amount; else buckets[k].c += r.amount;
   });
-
   let labels = [];
   if (currentPeriod==="week" || currentPeriod==="month"){
     const n = currentPeriod==="week" ? 7 : 30;
@@ -781,7 +1121,7 @@ async function renderStats(){
     labels = Object.keys(buckets).sort();
     if (!labels.length) labels = [ new Date().getFullYear()+"-"+String(new Date().getMonth()+1).padStart(2,"0") ];
   }
-  const charData  = labels.map(k => buckets[k]?.c || 0);
+  const charData = labels.map(k => buckets[k]?.c || 0);
   const haikuData = labels.map(k => buckets[k]?.h || 0);
   const dispLabels = labels.map(k => byMonth ? k.replace("-","年")+"月" : k.slice(5).replace("-","/"));
 
@@ -789,9 +1129,9 @@ async function renderStats(){
   chart = new Chart($("stat-chart"), {
     type:"bar",
     data:{ labels: dispLabels, datasets:[
-      { label:"文字数（字）", data:charData, backgroundColor:"rgba(44,74,99,.75)", borderRadius:3, yAxisID:"y" },
-      { label:"俳句（句）", data:haikuData, type:"line", borderColor:"#B33A2B",
-        backgroundColor:"rgba(179,58,43,.25)", pointBackgroundColor:"#B33A2B", tension:.25, yAxisID:"y2" }
+      { label:"文字数（字）", data:charData, backgroundColor:"rgba(78,139,132,.8)", borderRadius:6, yAxisID:"y" },
+      { label:"俳句（句）", data:haikuData, type:"line", borderColor:"#D95F55",
+        backgroundColor:"rgba(217,95,85,.25)", pointBackgroundColor:"#D95F55", tension:.25, yAxisID:"y2" }
     ]},
     options:{
       responsive:true, maintainAspectRatio:false,
@@ -799,13 +1139,12 @@ async function renderStats(){
       plugins:{ legend:{ labels:{ font:{ family:"'Zen Kaku Gothic New',sans-serif" } } } },
       scales:{
         x:{ ticks:{ maxTicksLimit: byMonth?12:10, font:{size:10} }, grid:{ display:false } },
-        y:{ beginAtZero:true, position:"left", title:{ display:true, text:"字" }, grid:{ color:"rgba(38,36,31,.08)" } },
+        y:{ beginAtZero:true, position:"left", title:{ display:true, text:"字" }, grid:{ color:"rgba(58,66,63,.07)" } },
         y2:{ beginAtZero:true, position:"right", title:{ display:true, text:"句" }, grid:{ drawOnChartArea:false }, ticks:{ precision:0 } }
       }
     }
   });
 
-  /* --- 作品別リスト --- */
   const byWork = {};
   rows.forEach(r => {
     const k = r.name + "｜" + r.category;
@@ -814,66 +1153,92 @@ async function renderStats(){
   });
   const wArr = Object.values(byWork).sort((a,b)=>b.total-a.total);
   $("by-work-empty").classList.toggle("hidden", wArr.length>0);
-  $("by-work-body").innerHTML = wArr.map(w => `
-    <tr>
+  $("by-work-body").innerHTML = wArr.map(w => `<tr>
       <td>${esc(w.name)}</td>
       <td><span class="tag ${w.category==="俳句"?"tag-haiku":""}">${esc(w.category)}</span></td>
       <td class="num">${fmt(w.total)} ${unitOf(w.category)}</td>
     </tr>`).join("");
 
-  /* --- 項目別リスト --- */
   const byCat = {};
   rows.forEach(r => { byCat[r.category] = (byCat[r.category]||0) + r.amount; });
-  const cArr = CATEGORIES.filter(c => byCat[c] != null).map(c => ({ category:c, total:byCat[c] }));
-  Object.keys(byCat).forEach(c => { if(!CATEGORIES.includes(c)) cArr.push({category:c,total:byCat[c]}); });
+  const cArr = CATEGORIES.filter(c => byCat[c] != null).map(c => ({category:c, total:byCat[c]}));
+  Object.keys(byCat).forEach(c => { if(!CATEGORIES.includes(c)) cArr.push({category:c, total:byCat[c]}); });
   $("by-cat-empty").classList.toggle("hidden", cArr.length>0);
-  $("by-cat-body").innerHTML = cArr.map(c => `
-    <tr>
+  $("by-cat-body").innerHTML = cArr.map(c => `<tr>
       <td><span class="tag ${c.category==="俳句"?"tag-haiku":""}">${esc(c.category)}</span></td>
       <td class="num">${fmt(c.total)} ${unitOf(c.category)}</td>
     </tr>`).join("");
 }
 
 /* =====================================================================
-   コメント
+   管理（マスターのみ）
    ===================================================================== */
-async function addComment(){
-  const msg = $("cm-msg"); msg.className="err"; msg.textContent = "";
-  const workId = $("cm-work").value;
-  const body = $("cm-body").value.trim();
-  if (!workId){ msg.textContent = "作品を選んでください。"; return; }
-  if (!body){ msg.textContent = "コメントを入力してください。"; return; }
-  const { error } = await sb.from(T_COMMENTS).insert({ user_id: currentUser.id, work_id: workId, body });
-  if (error){ msg.textContent = "保存できませんでした：" + error.message; return; }
-  $("cm-body").value = "";
-  msg.className="ok"; msg.textContent = "書き残しました。";
-  renderComments();
-}
-async function renderComments(){
-  const workId = $("cm-work").value;
-  const box = $("comments-list");
-  if (!workId){ box.innerHTML=""; $("comments-empty").classList.remove("hidden"); return; }
-  const { data, error } = await sb.from(T_COMMENTS)
-    .select("*").eq("work_id", workId).order("created_at",{ascending:false});
-  if (error){ console.error(error); return; }
-  const rows = data || [];
-  $("comments-empty").classList.toggle("hidden", rows.length>0);
-  box.innerHTML = rows.map(c => {
-    const when = new Date(c.created_at).toLocaleString("ja-JP",{year:"numeric",month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"});
-    return `<div class="comment-item">
-      <div class="head">
-        <span class="when">${when}</span>
-        <button class="btn btn-ghost btn-sm" onclick="deleteComment('${c.id}')">削除</button>
+async function renderAdmin(){
+  if (!isMaster) return;
+  const [pRes, wRes, rRes, cRes] = await Promise.all([
+    sb.from(T_PROFILES).select("*").order("created_at",{ascending:true}),
+    sb.from(T_WORKS).select("id, user_id, category"),
+    sb.from(T_RECORDS).select(`user_id, amount, works:${T_WORKS}(category)`),
+    sb.from(T_COMMENTS).select("user_id")
+  ]);
+  if (pRes.error){
+    $("acc-list").innerHTML = "";
+    $("acc-empty").classList.remove("hidden");
+    console.error(pRes.error);
+    return;
+  }
+  const profiles = pRes.data || [], allWorks = wRes.data || [],
+        allRecs = rRes.data || [], allCms = cRes.data || [];
+
+  const stat = {};
+  const touch = u => stat[u] = stat[u] || { works:0, chars:0, haiku:0, comments:0 };
+  allWorks.forEach(w => { touch(w.user_id); stat[w.user_id].works++; });
+  allRecs.forEach(r => {
+    touch(r.user_id);
+    if (r.works && r.works.category === "俳句") stat[r.user_id].haiku += r.amount;
+    else stat[r.user_id].chars += r.amount;
+  });
+  allCms.forEach(c => { touch(c.user_id); stat[c.user_id].comments++; });
+
+  $("ad-users").textContent = fmt(profiles.length);
+  $("ad-works").textContent = fmt(allWorks.length);
+  $("ad-chars").innerHTML = fmt(Object.values(stat).reduce((a,s)=>a+s.chars,0)) + "<small>字</small>";
+  $("ad-haiku").innerHTML = fmt(Object.values(stat).reduce((a,s)=>a+s.haiku,0)) + "<small>句</small>";
+
+  $("acc-empty").classList.toggle("hidden", profiles.length>0);
+  $("acc-list").innerHTML = profiles.map(p => {
+    const s = stat[p.user_id] || { works:0, chars:0, haiku:0, comments:0 };
+    const self = p.user_id === currentUser.id;
+    return `<div class="acc-item">
+      <div class="acc-top">
+        <div style="min-width:0">
+          <div class="acc-mail">${esc(p.email || "（不明）")}
+            ${self ? `<span class="badge-self">自分</span>` : ""}
+            ${p.is_blocked ? `<span class="badge-stop">停止中</span>` : ""}
+          </div>
+          <div class="acc-meta">
+            <span>登録 ${dayStr(p.created_at)}</span>
+            <span>作品 ${fmt(s.works)}</span>
+            <span>コメント ${fmt(s.comments)}</span>
+          </div>
+          <div class="acc-stats">
+            <span>文字数 <b>${fmt(s.chars)}</b> 字</span>
+            <span>句数 <b>${fmt(s.haiku)}</b> 句</span>
+          </div>
+        </div>
+        <div class="work-actions">
+          ${self ? "" : `<button class="btn btn-ghost btn-sm" onclick="toggleBlock('${p.user_id}', ${p.is_blocked ? "false":"true"})">${p.is_blocked ? "再開する":"停止する"}</button>`}
+        </div>
       </div>
-      <div class="body">${esc(c.body)}</div>
     </div>`;
   }).join("");
 }
-async function deleteComment(id){
-  if (!confirm("このコメントを削除しますか？")) return;
-  const { error } = await sb.from(T_COMMENTS).delete().eq("id", id);
-  if (error){ alert("削除できませんでした：" + error.message); return; }
-  renderComments();
+async function toggleBlock(userId, block){
+  const word = block ? "停止" : "再開";
+  if (!confirm(`このアカウントを${word}しますか？`)) return;
+  const { error } = await sb.from(T_PROFILES).update({ is_blocked: block }).eq("user_id", userId);
+  if (error){ alert("変更できませんでした：" + error.message); return; }
+  await renderAdmin();
 }
 </script>
 </body>
