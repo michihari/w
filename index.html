@@ -165,15 +165,6 @@ main{max-width:760px;margin:0 auto;padding:1.4rem 1rem 3rem}
   background:linear-gradient(to right, var(--michi) 0 2px, transparent 2px 12px) bottom left/12px 3px repeat-x;
 }
 
-/* 目標カード */
-.goal-card{display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap}
-.goal-bars{flex:1;min-width:12rem;display:flex;flex-direction:column;gap:.8rem}
-.gbar-row .gbar-top{display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:.32rem;color:var(--sumi-soft)}
-.gbar-row .gbar-top b{font-family:var(--maru);font-size:.95rem;color:var(--sumi)}
-.gbar{height:9px;border-radius:99px;background:var(--michi-soft);overflow:hidden}
-.gbar span{display:block;height:100%;border-radius:99px;background:var(--aka);transition:width .4s ease}
-.gbar span.met{background:var(--midori)}
-
 /* 目標の入力欄 */
 .goal-fields{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
 .input-unit{position:relative}
@@ -374,15 +365,6 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
     <!-- ===== 記録する ===== -->
     <section id="page-record">
       <h1 class="page-title">記録する</h1>
-
-      <div class="card">
-        <h2>今日の目標</h2>
-        <div class="goal-card">
-          <div class="goal-bars" id="goal-bars">
-            <p class="muted" id="goal-none">目標がまだありません。設定すると進み具合が出ます。</p>
-          </div>
-        </div>
-      </div>
 
       <div class="card">
         <h2>本日の執筆</h2>
@@ -803,7 +785,6 @@ async function refreshToday(){
   todayGoal = goalRes.error ? null : (goalRes.data || null);
   renderTodayList(rows);
   renderGoalBadge();
-  renderGoalBars();
   renderGoalButton();
 }
 function goalMet(){
@@ -825,30 +806,6 @@ function renderGoalBadge(){
   if (todayGoal.target_chars) parts.push("あと" + fmt(Math.max(0, todayGoal.target_chars - todayChars)) + "字");
   if (todayGoal.target_haiku) parts.push("あと" + fmt(Math.max(0, todayGoal.target_haiku - todayHaiku)) + "句");
   $("gb-sub").textContent = parts.join(" ");
-}
-function renderGoalBars(){
-  const box = $("goal-bars");
-  const tc = todayGoal ? (todayGoal.target_chars||0) : 0;
-  const th = todayGoal ? (todayGoal.target_haiku||0) : 0;
-  if (!tc && !th){
-    box.innerHTML = `<p class="muted">目標がまだありません。設定すると進み具合が出ます。</p>`;
-    return;
-  }
-  const bar = (label, cur, target, unit) => {
-    const pct = target ? Math.min(100, Math.round(cur/target*100)) : 0;
-    const met = cur >= target;
-    return `<div class="gbar-row">
-      <div class="gbar-top">
-        <span>${label}</span>
-        <span><b>${fmt(cur)}</b> / ${fmt(target)} ${unit}　${pct}%</span>
-      </div>
-      <div class="gbar"><span class="${met?"met":""}" style="width:${pct}%"></span></div>
-    </div>`;
-  };
-  let html = "";
-  if (tc) html += bar("文字数", todayChars, tc, "字");
-  if (th) html += bar("句数", todayHaiku, th, "句");
-  box.innerHTML = html;
 }
 function renderGoalButton(){
   const btn = $("btn-open-goal"), params = $("goal-btn-params");
@@ -1211,9 +1168,10 @@ async function renderStats(){
   chart = new Chart($("stat-chart"), {
     type:"bar",
     data:{ labels: dispLabels, datasets:[
-      { label:"文字数（字）", data:charData, backgroundColor:"rgba(78,139,132,.8)", borderRadius:6, yAxisID:"y" },
-      { label:"俳句（句）", data:haikuData, type:"line", borderColor:"#2B4570",
-        backgroundColor:"rgba(43,69,112,.2)", pointBackgroundColor:"#2B4570", tension:.25, yAxisID:"y2" }
+      { label:"文字数", data:charData, backgroundColor:"rgba(78,139,132,.8)", borderRadius:6, yAxisID:"y" },
+      { label:"句数", data:haikuData, type:"line", borderColor:"#2B4570", borderWidth:3,
+        fill:false, pointRadius:0, pointHoverRadius:4, pointBackgroundColor:"#2B4570",
+        tension:.3, yAxisID:"y2" }
     ]},
     options:{
       responsive:true, maintainAspectRatio:false,
@@ -1221,8 +1179,10 @@ async function renderStats(){
       plugins:{ legend:{ labels:{ font:{ family:"'Zen Kaku Gothic New',sans-serif" } } } },
       scales:{
         x:{ ticks:{ maxTicksLimit: byMonth?12:10, font:{size:10} }, grid:{ display:false } },
-        y:{ beginAtZero:true, position:"left", title:{ display:true, text:"字" }, grid:{ color:"rgba(58,66,63,.07)" } },
-        y2:{ beginAtZero:true, position:"right", title:{ display:true, text:"句" }, grid:{ drawOnChartArea:false }, ticks:{ precision:0 } }
+        y:{ beginAtZero:true, position:"left", grid:{ color:"rgba(58,66,63,.07)" },
+            ticks:{ font:{size:10}, callback: v => fmt(v) + "字" } },
+        y2:{ beginAtZero:true, position:"right", grid:{ drawOnChartArea:false },
+            ticks:{ precision:0, font:{size:10}, callback: v => fmt(v) + "句" } }
       }
     }
   });
