@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>執筆帖 — 作家活動記録</title>
+
+<!-- ===== スマホでアプリのように開くための設定（PWA） ===== -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="執筆帖">
+<meta name="theme-color" content="#26241F">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%2326241F'/%3E%3Ctext x='90' y='118' font-size='84' text-anchor='middle' fill='%23F7F4EC' font-family='serif'%3E筆%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%2326241F'/%3E%3Ctext x='32' y='44' font-size='32' text-anchor='middle' fill='%23F7F4EC' font-family='serif'%3E筆%3C/text%3E%3C/svg%3E">
+<link id="manifest-link" rel="manifest" href="">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root{
+  --paper:#F7F4EC;          /* 和紙 */
+  --paper-deep:#EFEADB;
+  --ink:#26241F;            /* 墨 */
+  --ink-soft:#4C483F;
+  --ai:#2C4A63;             /* 藍 */
+  --ai-deep:#213B50;
+  --shu:#B33A2B;            /* 朱 */
+  --shu-soft:rgba(179,58,43,.12);
+  --line:rgba(38,36,31,.14);
+  --grid:rgba(179,58,43,.16);
+  --radius:10px;
+  --serif:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --gothic:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{font-size:16px}
+body{
+  font-family:var(--gothic);
+  background:var(--paper);
+  color:var(--ink);
+  min-height:100dvh;
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px);
+  background-size:100% 2.2rem;
+  background-attachment:fixed;
+}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:1rem;color:var(--ink)}
+
+/* ===== 共通部品 ===== */
+.card{
+  background:rgba(255,255,255,.72);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:1.1rem 1.2rem;
+  margin-bottom:1rem;
+  backdrop-filter:blur(2px);
+}
+.card h2{
+  font-family:var(--serif);font-weight:600;font-size:1.05rem;
+  margin-bottom:.9rem;display:flex;align-items:center;gap:.55rem;
+}
+.card h2::before{content:"";display:inline-block;width:.55rem;height:.55rem;background:var(--shu);border-radius:1px;transform:rotate(45deg)}
+.field{margin-bottom:.85rem}
+.field label{display:block;font-size:.8rem;color:var(--ink-soft);margin-bottom:.3rem;letter-spacing:.06em}
+.field input,.field select,.field textarea{
+  width:100%;padding:.65rem .75rem;border:1px solid var(--line);
+  border-radius:8px;background:#fff;outline:none;
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--ai);box-shadow:0 0 0 3px rgba(44,74,99,.15)}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:.4rem;
+  padding:.7rem 1.3rem;border-radius:8px;border:1px solid transparent;
+  font-size:.95rem;font-weight:600;letter-spacing:.05em;transition:filter .15s;
+}
+.btn:hover{filter:brightness(1.08)}
+.btn:focus-visible{outline:2px solid var(--ai);outline-offset:2px}
+.btn-primary{background:var(--ai);color:#fff}
+.btn-shu{background:var(--shu);color:#fff}
+.btn-ghost{background:transparent;border-color:var(--line);color:var(--ink-soft)}
+.btn-block{width:100%}
+.btn-sm{padding:.35rem .7rem;font-size:.8rem;border-radius:6px}
+.tag{
+  display:inline-block;font-size:.7rem;padding:.15rem .5rem;border-radius:999px;
+  border:1px solid var(--line);color:var(--ink-soft);background:#fff;
+}
+.tag-haiku{border-color:var(--shu);color:var(--shu);background:var(--shu-soft)}
+.muted{color:var(--ink-soft);font-size:.85rem}
+.err{color:var(--shu);font-size:.85rem;margin-top:.5rem;min-height:1.2em}
+.ok{color:var(--ai);font-size:.85rem;margin-top:.5rem}
+.hidden{display:none!important}
+
+/* ===== ログイン画面 ===== */
+#auth-screen{
+  min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:1.5rem;
+}
+.auth-box{width:100%;max-width:400px}
+.auth-title{
+  font-family:var(--serif);text-align:center;margin-bottom:1.6rem;
+}
+.auth-title .main{font-size:2.6rem;font-weight:800;letter-spacing:.35em;text-indent:.35em;display:block}
+.auth-title .sub{font-size:.8rem;color:var(--ink-soft);letter-spacing:.25em;display:block;margin-top:.4rem}
+.auth-tabs{display:flex;margin-bottom:1rem;border-bottom:1px solid var(--line)}
+.auth-tabs button{
+  flex:1;background:none;border:none;padding:.6rem;font-size:.9rem;color:var(--ink-soft);
+  border-bottom:2px solid transparent;
+}
+.auth-tabs button.active{color:var(--ink);border-bottom-color:var(--shu);font-weight:700}
+.master-note{
+  margin-top:1rem;text-align:center;font-size:.75rem;color:var(--ink-soft);
+}
+
+/* ===== アプリ本体 ===== */
+#app-screen{padding-bottom:calc(4.6rem + env(safe-area-inset-bottom))}
+.topbar{
+  position:sticky;top:0;z-index:20;
+  background:var(--ink);color:var(--paper);
+  padding:calc(.7rem + env(safe-area-inset-top)) 1rem .7rem;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.topbar .brand{font-family:var(--serif);font-weight:600;font-size:1.15rem;letter-spacing:.3em}
+.topbar .who{font-size:.72rem;opacity:.85;display:flex;align-items:center;gap:.5rem}
+.master-badge{
+  background:var(--shu);color:#fff;font-size:.65rem;padding:.1rem .45rem;border-radius:3px;letter-spacing:.1em;
+}
+.topbar button{background:none;border:1px solid rgba(247,244,236,.4);color:var(--paper);border-radius:6px;padding:.25rem .6rem;font-size:.75rem}
+main{max-width:760px;margin:0 auto;padding:1.2rem 1rem 2rem}
+
+/* 下部タブ（スマホアプリ風） */
+.tabbar{
+  position:fixed;left:0;right:0;bottom:0;z-index:30;
+  background:var(--ink);
+  display:flex;
+  padding-bottom:env(safe-area-inset-bottom);
+  border-top:1px solid rgba(247,244,236,.15);
+}
+.tabbar button{
+  flex:1;background:none;border:none;color:rgba(247,244,236,.6);
+  padding:.6rem 0 .55rem;font-size:.7rem;letter-spacing:.08em;
+  display:flex;flex-direction:column;align-items:center;gap:.2rem;
+}
+.tabbar button .glyph{font-family:var(--serif);font-size:1.25rem;line-height:1}
+.tabbar button.active{color:var(--paper)}
+.tabbar button.active .glyph{color:var(--shu-bright,#E8836F)}
+.tabbar button.active::after{content:"";width:1.4rem;height:2px;background:var(--shu);margin-top:.15rem}
+
+/* ページ見出し（縦書きの署名要素） */
+.page-head{display:flex;align-items:flex-start;gap:.9rem;margin-bottom:1.1rem}
+.page-head .v{
+  writing-mode:vertical-rl;font-family:var(--serif);font-weight:800;font-size:1.5rem;
+  letter-spacing:.3em;border-left:2px solid var(--shu);padding-left:.5rem;min-height:5.2rem;
+}
+.page-head .desc{font-size:.82rem;color:var(--ink-soft);padding-top:.3rem;line-height:1.9}
+
+/* 記録リスト */
+.rec-list{list-style:none}
+.rec-list li{
+  display:flex;align-items:center;justify-content:space-between;gap:.6rem;
+  padding:.65rem .2rem;border-bottom:1px dashed var(--line);
+}
+.rec-list li:last-child{border-bottom:none}
+.rec-main{display:flex;flex-direction:column;gap:.15rem;min-width:0}
+.rec-main .t1{font-weight:600;font-size:.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rec-main .t2{font-size:.75rem;color:var(--ink-soft)}
+.rec-amt{font-family:var(--serif);font-weight:600;white-space:nowrap}
+.rec-amt small{font-size:.7rem;color:var(--ink-soft);margin-left:.15rem}
+
+/* 統計 */
+.period-tabs{display:flex;gap:.4rem;margin-bottom:1rem;flex-wrap:wrap}
+.period-tabs button{
+  flex:1;min-width:4.5rem;padding:.5rem 0;border-radius:8px;border:1px solid var(--line);
+  background:#fff;color:var(--ink-soft);font-size:.85rem;letter-spacing:.1em;
+}
+.period-tabs button.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-bottom:1rem}
+.stat-cell{
+  background:rgba(255,255,255,.72);border:1px solid var(--line);border-radius:var(--radius);
+  padding:.8rem .9rem;position:relative;overflow:hidden;
+}
+.stat-cell.haiku{border-color:var(--shu);background:linear-gradient(rgba(179,58,43,.05),rgba(179,58,43,.05)),rgba(255,255,255,.72)}
+.stat-cell .lbl{font-size:.7rem;color:var(--ink-soft);letter-spacing:.1em}
+.stat-cell .num{font-family:var(--serif);font-size:1.55rem;font-weight:800;margin-top:.2rem}
+.stat-cell .num small{font-size:.75rem;font-weight:400;color:var(--ink-soft);margin-left:.2rem}
+.chart-wrap{position:relative;height:260px}
+.list-table{width:100%;border-collapse:collapse;font-size:.88rem}
+.list-table th{
+  text-align:left;font-size:.72rem;color:var(--ink-soft);font-weight:500;
+  padding:.4rem .3rem;border-bottom:1px solid var(--line);letter-spacing:.08em;
+}
+.list-table td{padding:.55rem .3rem;border-bottom:1px dashed var(--line)}
+.list-table td.num{text-align:right;font-family:var(--serif);font-weight:600;white-space:nowrap}
+.list-table tr:last-child td{border-bottom:none}
+
+/* 書斎 */
+.work-item{
+  display:flex;align-items:center;justify-content:space-between;gap:.6rem;
+  padding:.75rem .2rem;border-bottom:1px dashed var(--line);
+}
+.work-item:last-child{border-bottom:none}
+.work-item .info{min-width:0}
+.work-item .name{font-family:var(--serif);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.work-item .meta{font-size:.75rem;color:var(--ink-soft);margin-top:.15rem}
+.work-actions{display:flex;gap:.35rem;flex-shrink:0}
+
+/* コメント */
+.comment-item{padding:.7rem 0;border-bottom:1px dashed var(--line)}
+.comment-item:last-child{border-bottom:none}
+.comment-item .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:.3rem}
+.comment-item .when{font-size:.72rem;color:var(--ink-soft)}
+.comment-item .body{font-size:.92rem;line-height:1.9;white-space:pre-wrap}
+
+/* 設定案内 */
+#setup-screen{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:1.5rem}
+.setup-box{max-width:640px;width:100%}
+.setup-box pre{
+  background:var(--ink);color:var(--paper);border-radius:8px;padding:1rem;
+  font-size:.75rem;overflow-x:auto;line-height:1.7;margin:.6rem 0 1rem;
+}
+.setup-box h1{font-family:var(--serif);font-size:1.4rem;margin-bottom:.8rem}
+.setup-box ol{padding-left:1.3rem;line-height:2}
+
+@media (min-width:700px){
+  .stat-grid{grid-template-columns:repeat(4,1fr)}
+  .chart-wrap{height:320px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ 初期設定案内（Supabase未設定時） ============ -->
+<div id="setup-screen" class="hidden">
+  <div class="setup-box card">
+    <h1>執筆帖 — 初期設定</h1>
+    <p class="muted">このアプリを使うには、Supabase プロジェクトの接続情報を設定してください。</p>
+    <ol>
+      <li><a href="https://supabase.com" target="_blank" rel="noopener">supabase.com</a> で無料プロジェクトを作成</li>
+      <li>SQL Editor で、同梱の <b>setup.sql</b>（テーブル作成スクリプト）を実行</li>
+      <li>Authentication → Providers → Email を有効化（確認メールは任意）</li>
+      <li>Project Settings → API から <b>Project URL</b> と <b>anon public key</b> を取得</li>
+      <li>この HTML ファイルをテキストエディタで開き、先頭付近の
+        <pre>const SUPABASE_URL  = "ここにProject URL";
+const SUPABASE_ANON = "ここにanon key";</pre>
+        を書き換えて保存</li>
+    </ol>
+    <p class="muted">設定後にこのページを再読み込みすると、ログイン画面が表示されます。</p>
+  </div>
+</div>
+
+<!-- ============ ログイン画面 ============ -->
+<div id="auth-screen" class="hidden">
+  <div class="auth-box">
+    <div class="auth-title">
+      <span class="main">執筆帖</span>
+      <span class="sub">— 作家活動の記録 —</span>
+    </div>
+    <div class="card">
+      <div class="auth-tabs">
+        <button id="tab-login" class="active" type="button">ログイン</button>
+        <button id="tab-signup" type="button">新規登録</button>
+      </div>
+      <div class="field">
+        <label for="auth-email">メールアドレス</label>
+        <input id="auth-email" type="email" autocomplete="email" placeholder="example@mail.com">
+      </div>
+      <div class="field">
+        <label for="auth-pass">パスワード</label>
+        <input id="auth-pass" type="password" autocomplete="current-password" placeholder="6文字以上">
+      </div>
+      <button id="auth-submit" class="btn btn-primary btn-block" type="button">ログイン</button>
+      <p id="auth-msg" class="err"></p>
+      <p class="master-note">マスターアカウント：michihari.natori.note@gmail.com</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ アプリ本体 ============ -->
+<div id="app-screen" class="hidden">
+  <header class="topbar">
+    <span class="brand">執筆帖</span>
+    <span class="who">
+      <span id="who-email"></span>
+      <span id="who-master" class="master-badge hidden">マスター</span>
+      <button id="btn-logout" type="button">ログアウト</button>
+    </span>
+  </header>
+
+  <main>
+    <!-- ===== 記録する ===== -->
+    <section id="page-record">
+      <div class="page-head">
+        <div class="v">記録する</div>
+        <p class="desc">今日書いた文字数を作品ごとに記します。<br>俳句は句数で記録されます。</p>
+      </div>
+      <div class="card">
+        <h2>本日の筆</h2>
+        <div class="field">
+          <label for="rec-date">日付</label>
+          <input id="rec-date" type="date">
+        </div>
+        <div class="field">
+          <label for="rec-work">作品</label>
+          <select id="rec-work"></select>
+        </div>
+        <div class="field">
+          <label for="rec-amount" id="rec-amount-label">文字数</label>
+          <input id="rec-amount" type="number" min="0" step="1" inputmode="numeric" placeholder="0">
+        </div>
+        <button id="btn-save-record" class="btn btn-shu btn-block" type="button">記録する</button>
+        <p id="rec-msg" class="err"></p>
+      </div>
+      <div class="card">
+        <h2>この日の記録</h2>
+        <ul id="rec-today-list" class="rec-list"></ul>
+        <p id="rec-today-empty" class="muted">まだ記録がありません。</p>
+      </div>
+    </section>
+
+    <!-- ===== 書斎 ===== -->
+    <section id="page-works" class="hidden">
+      <div class="page-head">
+        <div class="v">書斎</div>
+        <p class="desc">作品を並べる棚。六つの項目から選び、<br>作品を登録・整理します。</p>
+      </div>
+      <div class="card">
+        <h2>新しい作品を置く</h2>
+        <div class="field">
+          <label for="work-name">作品名</label>
+          <input id="work-name" type="text" placeholder="例：北の紀行、冬の句帖 …">
+        </div>
+        <div class="field">
+          <label for="work-cat">項目</label>
+          <select id="work-cat">
+            <option value="小説">小説</option>
+            <option value="紀行文">紀行文</option>
+            <option value="哲学">哲学</option>
+            <option value="論文">論文</option>
+            <option value="詩">詩</option>
+            <option value="俳句">俳句（句数で記録）</option>
+          </select>
+        </div>
+        <button id="btn-add-work" class="btn btn-primary btn-block" type="button">書斎に置く</button>
+        <p id="work-msg" class="err"></p>
+      </div>
+      <div class="card">
+        <h2>棚の作品</h2>
+        <div id="works-list"></div>
+        <p id="works-empty" class="muted">まだ作品がありません。上から登録してください。</p>
+      </div>
+    </section>
+
+    <!-- ===== 統計 ===== -->
+    <section id="page-stats" class="hidden">
+      <div class="page-head">
+        <div class="v">統計</div>
+        <p class="desc">筆の歩みを数字と図で眺めます。<br>文字数と句数は分けて集計します。</p>
+      </div>
+      <div class="period-tabs" id="period-tabs">
+        <button data-p="week" class="active" type="button">週</button>
+        <button data-p="month" type="button">月</button>
+        <button data-p="year" type="button">年間</button>
+        <button data-p="all" type="button">全体</button>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-cell">
+          <div class="lbl">文字数 合計</div>
+          <div class="num" id="st-char-total">0<small>字</small></div>
+        </div>
+        <div class="stat-cell">
+          <div class="lbl">文字数 一日平均（執筆日）</div>
+          <div class="num" id="st-char-avg">0<small>字</small></div>
+        </div>
+        <div class="stat-cell haiku">
+          <div class="lbl">俳句 合計</div>
+          <div class="num" id="st-haiku-total">0<small>句</small></div>
+        </div>
+        <div class="stat-cell haiku">
+          <div class="lbl">俳句 一日平均（執筆日）</div>
+          <div class="num" id="st-haiku-avg">0<small>句</small></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>推移</h2>
+        <div class="chart-wrap"><canvas id="stat-chart"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>作品別の内訳</h2>
+        <table class="list-table">
+          <thead><tr><th>作品</th><th>項目</th><th style="text-align:right">量</th></tr></thead>
+          <tbody id="by-work-body"></tbody>
+        </table>
+        <p id="by-work-empty" class="muted">この期間の記録はありません。</p>
+      </div>
+      <div class="card">
+        <h2>項目別の内訳</h2>
+        <table class="list-table">
+          <thead><tr><th>項目</th><th style="text-align:right">量</th></tr></thead>
+          <tbody id="by-cat-body"></tbody>
+        </table>
+        <p id="by-cat-empty" class="muted">この期間の記録はありません。</p>
+      </div>
+    </section>
+
+    <!-- ===== コメント ===== -->
+    <section id="page-comments" class="hidden">
+      <div class="page-head">
+        <div class="v">コメント</div>
+        <p class="desc">作品ごとの覚え書き。進み具合や着想、<br>推敲の跡を残します。</p>
+      </div>
+      <div class="card">
+        <h2>作品を選ぶ</h2>
+        <div class="field">
+          <select id="cm-work"></select>
+        </div>
+        <div class="field">
+          <label for="cm-body">コメント</label>
+          <textarea id="cm-body" rows="4" placeholder="この作品についての覚え書き…"></textarea>
+        </div>
+        <button id="btn-add-comment" class="btn btn-primary btn-block" type="button">書き残す</button>
+        <p id="cm-msg" class="err"></p>
+      </div>
+      <div class="card">
+        <h2>覚え書き一覧</h2>
+        <div id="comments-list"></div>
+        <p id="comments-empty" class="muted">この作品にはまだコメントがありません。</p>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabbar">
+    <button data-page="record" class="active" type="button"><span class="glyph">筆</span>記録する</button>
+    <button data-page="works" type="button"><span class="glyph">棚</span>書斎</button>
+    <button data-page="stats" type="button"><span class="glyph">図</span>統計</button>
+    <button data-page="comments" type="button"><span class="glyph">註</span>コメント</button>
+  </nav>
+</div>
+
+<script>
+/* =====================================================================
+   ▼▼▼ Supabase 接続設定（ここを書き換えてください） ▼▼▼
+   ===================================================================== */
+const SUPABASE_URL  = "YOUR_SUPABASE_URL";   // 例: https://xxxx.supabase.co
+const SUPABASE_ANON = "YOUR_SUPABASE_ANON_KEY";
+/* ===================================================================== */
+
+const MASTER_EMAIL = "michihari.natori.note@gmail.com";
+const CATEGORIES = ["小説","紀行文","哲学","論文","詩","俳句"];
+
+/* ---- PWAマニフェスト（インライン生成：ホーム画面追加でアプリ風に） ---- */
+(function(){
+  const manifest = {
+    name:"執筆帖 — 作家活動記録", short_name:"執筆帖",
+    display:"standalone", start_url:".", scope:".",
+    background_color:"#F7F4EC", theme_color:"#26241F",
+    icons:[{src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%2326241F'/%3E%3Ctext x='256' y='330' font-size='240' text-anchor='middle' fill='%23F7F4EC' font-family='serif'%3E筆%3C/text%3E%3C/svg%3E",
+      sizes:"512x512", type:"image/svg+xml", purpose:"any"}]
+  };
+  const blob = new Blob([JSON.stringify(manifest)],{type:"application/json"});
+  document.getElementById("manifest-link").href = URL.createObjectURL(blob);
+})();
+
+/* ---- ユーティリティ ---- */
+const $ = id => document.getElementById(id);
+const fmt = n => Number(n||0).toLocaleString("ja-JP");
+const todayStr = () => {
+  const d = new Date();
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+};
+const esc = s => String(s??"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const unitOf = cat => cat==="俳句" ? "句" : "字";
+
+let sb = null, currentUser = null, isMaster = false;
+let works = [], chart = null, currentPeriod = "week";
+
+/* ---- 起動 ---- */
+window.addEventListener("DOMContentLoaded", async () => {
+  if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_")) {
+    $("setup-screen").classList.remove("hidden");
+    return;
+  }
+  sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  $("rec-date").value = todayStr();
+
+  bindAuth(); bindApp();
+
+  const { data:{ session } } = await sb.auth.getSession();
+  if (session) enterApp(session.user); else $("auth-screen").classList.remove("hidden");
+
+  sb.auth.onAuthStateChange((_e, session) => {
+    if (!session && currentUser) location.reload();
+  });
+});
+
+/* =====================================================================
+   認証
+   ===================================================================== */
+let authMode = "login";
+function bindAuth(){
+  $("tab-login").onclick  = () => setAuthMode("login");
+  $("tab-signup").onclick = () => setAuthMode("signup");
+  $("auth-submit").onclick = doAuth;
+  $("auth-pass").addEventListener("keydown", e => { if(e.key==="Enter") doAuth(); });
+}
+function setAuthMode(m){
+  authMode = m;
+  $("tab-login").classList.toggle("active", m==="login");
+  $("tab-signup").classList.toggle("active", m==="signup");
+  $("auth-submit").textContent = m==="login" ? "ログイン" : "登録する";
+  $("auth-msg").textContent = "";
+}
+async function doAuth(){
+  const email = $("auth-email").value.trim();
+  const password = $("auth-pass").value;
+  const msg = $("auth-msg");
+  msg.textContent = "";
+  if (!email || !password){ msg.textContent = "メールアドレスとパスワードを入力してください。"; return; }
+  $("auth-submit").disabled = true;
+  try{
+    if (authMode === "login"){
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      enterApp(data.user);
+    } else {
+      const { data, error } = await sb.auth.signUp({ email, password });
+      if (error) throw error;
+      if (data.session){ enterApp(data.user); }
+      else { msg.className = "ok"; msg.textContent = "確認メールを送信しました。メール内のリンクを開いてからログインしてください。"; }
+    }
+  }catch(e){
+    msg.className = "err";
+    msg.textContent = translateAuthError(e.message);
+  }finally{
+    $("auth-submit").disabled = false;
+  }
+}
+function translateAuthError(m){
+  if (/Invalid login credentials/i.test(m)) return "メールアドレスまたはパスワードが違います。";
+  if (/already registered/i.test(m)) return "このメールアドレスは登録済みです。ログインしてください。";
+  if (/at least 6/i.test(m)) return "パスワードは6文字以上にしてください。";
+  if (/valid email/i.test(m)) return "メールアドレスの形式が正しくありません。";
+  return "エラー：" + m;
+}
+async function enterApp(user){
+  currentUser = user;
+  isMaster = (user.email || "").toLowerCase() === MASTER_EMAIL.toLowerCase();
+  $("auth-screen").classList.add("hidden");
+  $("app-screen").classList.remove("hidden");
+  $("who-email").textContent = user.email;
+  $("who-master").classList.toggle("hidden", !isMaster);
+  await loadWorks();
+  await renderTodayList();
+}
+
+/* =====================================================================
+   アプリ共通
+   ===================================================================== */
+function bindApp(){
+  $("btn-logout").onclick = async () => { await sb.auth.signOut(); location.reload(); };
+
+  document.querySelectorAll(".tabbar button").forEach(b => {
+    b.onclick = () => showPage(b.dataset.page);
+  });
+
+  $("btn-save-record").onclick = saveRecord;
+  $("rec-date").onchange = renderTodayList;
+  $("rec-work").onchange = updateAmountLabel;
+
+  $("btn-add-work").onclick = addWork;
+  $("btn-add-comment").onclick = addComment;
+  $("cm-work").onchange = renderComments;
+
+  document.querySelectorAll("#period-tabs button").forEach(b => {
+    b.onclick = () => {
+      currentPeriod = b.dataset.p;
+      document.querySelectorAll("#period-tabs button").forEach(x => x.classList.toggle("active", x===b));
+      renderStats();
+    };
+  });
+}
+function showPage(p){
+  ["record","works","stats","comments"].forEach(k => {
+    $("page-"+k).classList.toggle("hidden", k!==p);
+  });
+  document.querySelectorAll(".tabbar button").forEach(b => b.classList.toggle("active", b.dataset.page===p));
+  if (p==="stats") renderStats();
+  if (p==="comments") renderComments();
+  window.scrollTo({top:0});
+}
+
+/* =====================================================================
+   書斎（作品管理）
+   ===================================================================== */
+async function loadWorks(){
+  const { data, error } = await sb.from("works").select("*").order("created_at",{ascending:true});
+  if (error){ console.error(error); return; }
+  works = data || [];
+  fillWorkSelects();
+  renderWorksList();
+}
+function fillWorkSelects(){
+  const opts = works.map(w => `<option value="${w.id}">${esc(w.name)}（${esc(w.category)}）</option>`).join("");
+  const ph = `<option value="">— 作品を選択 —</option>`;
+  $("rec-work").innerHTML = ph + opts;
+  $("cm-work").innerHTML = ph + opts;
+  updateAmountLabel();
+}
+function updateAmountLabel(){
+  const w = works.find(x => x.id === $("rec-work").value);
+  const haiku = w && w.category === "俳句";
+  $("rec-amount-label").textContent = haiku ? "句数" : "文字数";
+  $("rec-amount").placeholder = haiku ? "例：3（句）" : "例：1200（字）";
+}
+async function addWork(){
+  const name = $("work-name").value.trim();
+  const category = $("work-cat").value;
+  const msg = $("work-msg"); msg.textContent = "";
+  if (!name){ msg.textContent = "作品名を入力してください。"; return; }
+  const { error } = await sb.from("works").insert({ user_id: currentUser.id, name, category });
+  if (error){ msg.textContent = "保存できませんでした：" + error.message; return; }
+  $("work-name").value = "";
+  await loadWorks();
+}
+async function renderWorksList(){
+  const box = $("works-list");
+  $("works-empty").classList.toggle("hidden", works.length>0);
+  if (!works.length){ box.innerHTML=""; return; }
+
+  const { data: recs } = await sb.from("records").select("work_id, amount");
+  const totals = {};
+  (recs||[]).forEach(r => totals[r.work_id] = (totals[r.work_id]||0) + r.amount);
+
+  box.innerHTML = works.map(w => `
+    <div class="work-item">
+      <div class="info">
+        <div class="name">${esc(w.name)}</div>
+        <div class="meta">
+          <span class="tag ${w.category==="俳句"?"tag-haiku":""}">${esc(w.category)}</span>
+          　累計 ${fmt(totals[w.id]||0)} ${unitOf(w.category)}
+        </div>
+      </div>
+      <div class="work-actions">
+        <button class="btn btn-ghost btn-sm" onclick="renameWork('${w.id}')">改題</button>
+        <button class="btn btn-ghost btn-sm" onclick="deleteWork('${w.id}')">削除</button>
+      </div>
+    </div>`).join("");
+}
+async function renameWork(id){
+  const w = works.find(x=>x.id===id); if(!w) return;
+  const name = prompt("新しい作品名", w.name);
+  if (!name || !name.trim()) return;
+  const { error } = await sb.from("works").update({ name: name.trim() }).eq("id", id);
+  if (error) alert("変更できませんでした：" + error.message);
+  await loadWorks();
+}
+async function deleteWork(id){
+  const w = works.find(x=>x.id===id); if(!w) return;
+  if (!confirm(`「${w.name}」を削除します。\nこの作品の記録とコメントも消えます。よろしいですか？`)) return;
+  const { error } = await sb.from("works").delete().eq("id", id);
+  if (error){ alert("削除できませんでした：" + error.message); return; }
+  await loadWorks();
+  await renderTodayList();
+}
+
+/* =====================================================================
+   記録する
+   ===================================================================== */
+async function saveRecord(){
+  const msg = $("rec-msg"); msg.className="err"; msg.textContent = "";
+  const date = $("rec-date").value;
+  const workId = $("rec-work").value;
+  const amount = parseInt($("rec-amount").value, 10);
+  if (!date){ msg.textContent = "日付を選んでください。"; return; }
+  if (!workId){ msg.textContent = "作品を選んでください。まだ無ければ「書斎」で登録できます。"; return; }
+  if (!(amount >= 0)){ msg.textContent = "数を入力してください。"; return; }
+  const { error } = await sb.from("records").insert({ user_id: currentUser.id, work_id: workId, date, amount });
+  if (error){ msg.textContent = "保存できませんでした：" + error.message; return; }
+  const w = works.find(x=>x.id===workId);
+  msg.className = "ok";
+  msg.textContent = `記録しました：${w?w.name:""} ${fmt(amount)}${unitOf(w?w.category:"")}`;
+  $("rec-amount").value = "";
+  renderTodayList();
+}
+async function renderTodayList(){
+  const date = $("rec-date").value || todayStr();
+  const { data, error } = await sb.from("records")
+    .select("id, amount, work_id, works(name, category)")
+    .eq("date", date).order("created_at",{ascending:true});
+  const list = $("rec-today-list");
+  if (error){ console.error(error); return; }
+  const rows = data || [];
+  $("rec-today-empty").classList.toggle("hidden", rows.length>0);
+  list.innerHTML = rows.map(r => {
+    const nm = r.works ? r.works.name : "（削除済の作品）";
+    const cat = r.works ? r.works.category : "";
+    return `<li>
+      <div class="rec-main">
+        <span class="t1">${esc(nm)}</span>
+        <span class="t2"><span class="tag ${cat==="俳句"?"tag-haiku":""}">${esc(cat)}</span></span>
+      </div>
+      <span class="rec-amt">${fmt(r.amount)}<small>${unitOf(cat)}</small></span>
+      <button class="btn btn-ghost btn-sm" onclick="deleteRecord('${r.id}')">取消</button>
+    </li>`;
+  }).join("");
+}
+async function deleteRecord(id){
+  if (!confirm("この記録を取り消しますか？")) return;
+  const { error } = await sb.from("records").delete().eq("id", id);
+  if (error){ alert("取消できませんでした：" + error.message); return; }
+  renderTodayList();
+}
+
+/* =====================================================================
+   統計
+   ===================================================================== */
+function periodRange(p){
+  const now = new Date(); now.setHours(0,0,0,0);
+  const d = new Date(now);
+  if (p==="week"){ d.setDate(d.getDate()-6); return d; }
+  if (p==="month"){ d.setDate(d.getDate()-29); return d; }
+  if (p==="year"){ d.setFullYear(d.getFullYear()-1); d.setDate(d.getDate()+1); return d; }
+  return null; // 全体
+}
+function dstr(d){
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+async function renderStats(){
+  let q = sb.from("records").select("date, amount, work_id, works(name, category)");
+  const from = periodRange(currentPeriod);
+  if (from) q = q.gte("date", dstr(from));
+  const { data, error } = await q.order("date",{ascending:true});
+  if (error){ console.error(error); return; }
+  const rows = (data||[]).map(r => ({
+    date: r.date, amount: r.amount,
+    name: r.works ? r.works.name : "（削除済）",
+    category: r.works ? r.works.category : "その他",
+    haiku: r.works ? r.works.category === "俳句" : false
+  }));
+
+  /* --- 合計・一日平均（文字と句を分離） --- */
+  let charTotal=0, haikuTotal=0;
+  const charDays = new Set(), haikuDays = new Set();
+  rows.forEach(r => {
+    if (r.haiku){ haikuTotal += r.amount; haikuDays.add(r.date); }
+    else { charTotal += r.amount; charDays.add(r.date); }
+  });
+  $("st-char-total").innerHTML  = fmt(charTotal) + "<small>字</small>";
+  $("st-haiku-total").innerHTML = fmt(haikuTotal) + "<small>句</small>";
+  $("st-char-avg").innerHTML  = fmt(charDays.size ? Math.round(charTotal/charDays.size) : 0) + "<small>字</small>";
+  $("st-haiku-avg").innerHTML = fmt(haikuDays.size ? Math.round(haikuTotal*10/haikuDays.size)/10 : 0) + "<small>句</small>";
+
+  /* --- グラフ用に日別/月別へ集計 --- */
+  const byMonth = (currentPeriod==="year" || currentPeriod==="all");
+  const keyOf = d => byMonth ? d.slice(0,7) : d;
+  const buckets = {};
+  rows.forEach(r => {
+    const k = keyOf(r.date);
+    buckets[k] = buckets[k] || { c:0, h:0 };
+    if (r.haiku) buckets[k].h += r.amount; else buckets[k].c += r.amount;
+  });
+
+  let labels = [];
+  if (currentPeriod==="week" || currentPeriod==="month"){
+    const n = currentPeriod==="week" ? 7 : 30;
+    for (let i=n-1;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); labels.push(dstr(d)); }
+  } else if (currentPeriod==="year"){
+    for (let i=11;i>=0;i--){ const d=new Date(); d.setMonth(d.getMonth()-i); labels.push(d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")); }
+  } else {
+    labels = Object.keys(buckets).sort();
+    if (!labels.length) labels = [ new Date().getFullYear()+"-"+String(new Date().getMonth()+1).padStart(2,"0") ];
+  }
+  const charData  = labels.map(k => buckets[k]?.c || 0);
+  const haikuData = labels.map(k => buckets[k]?.h || 0);
+  const dispLabels = labels.map(k => byMonth ? k.replace("-","年")+"月" : k.slice(5).replace("-","/"));
+
+  if (chart) chart.destroy();
+  chart = new Chart($("stat-chart"), {
+    type:"bar",
+    data:{ labels: dispLabels, datasets:[
+      { label:"文字数（字）", data:charData, backgroundColor:"rgba(44,74,99,.75)", borderRadius:3, yAxisID:"y" },
+      { label:"俳句（句）", data:haikuData, type:"line", borderColor:"#B33A2B",
+        backgroundColor:"rgba(179,58,43,.25)", pointBackgroundColor:"#B33A2B", tension:.25, yAxisID:"y2" }
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{ mode:"index", intersect:false },
+      plugins:{ legend:{ labels:{ font:{ family:"'Zen Kaku Gothic New',sans-serif" } } } },
+      scales:{
+        x:{ ticks:{ maxTicksLimit: byMonth?12:10, font:{size:10} }, grid:{ display:false } },
+        y:{ beginAtZero:true, position:"left", title:{ display:true, text:"字" }, grid:{ color:"rgba(38,36,31,.08)" } },
+        y2:{ beginAtZero:true, position:"right", title:{ display:true, text:"句" }, grid:{ drawOnChartArea:false }, ticks:{ precision:0 } }
+      }
+    }
+  });
+
+  /* --- 作品別リスト --- */
+  const byWork = {};
+  rows.forEach(r => {
+    const k = r.name + "｜" + r.category;
+    byWork[k] = byWork[k] || { name:r.name, category:r.category, total:0 };
+    byWork[k].total += r.amount;
+  });
+  const wArr = Object.values(byWork).sort((a,b)=>b.total-a.total);
+  $("by-work-empty").classList.toggle("hidden", wArr.length>0);
+  $("by-work-body").innerHTML = wArr.map(w => `
+    <tr>
+      <td>${esc(w.name)}</td>
+      <td><span class="tag ${w.category==="俳句"?"tag-haiku":""}">${esc(w.category)}</span></td>
+      <td class="num">${fmt(w.total)} ${unitOf(w.category)}</td>
+    </tr>`).join("");
+
+  /* --- 項目別リスト --- */
+  const byCat = {};
+  rows.forEach(r => { byCat[r.category] = (byCat[r.category]||0) + r.amount; });
+  const cArr = CATEGORIES.filter(c => byCat[c] != null).map(c => ({ category:c, total:byCat[c] }));
+  Object.keys(byCat).forEach(c => { if(!CATEGORIES.includes(c)) cArr.push({category:c,total:byCat[c]}); });
+  $("by-cat-empty").classList.toggle("hidden", cArr.length>0);
+  $("by-cat-body").innerHTML = cArr.map(c => `
+    <tr>
+      <td><span class="tag ${c.category==="俳句"?"tag-haiku":""}">${esc(c.category)}</span></td>
+      <td class="num">${fmt(c.total)} ${unitOf(c.category)}</td>
+    </tr>`).join("");
+}
+
+/* =====================================================================
+   コメント
+   ===================================================================== */
+async function addComment(){
+  const msg = $("cm-msg"); msg.className="err"; msg.textContent = "";
+  const workId = $("cm-work").value;
+  const body = $("cm-body").value.trim();
+  if (!workId){ msg.textContent = "作品を選んでください。"; return; }
+  if (!body){ msg.textContent = "コメントを入力してください。"; return; }
+  const { error } = await sb.from("comments").insert({ user_id: currentUser.id, work_id: workId, body });
+  if (error){ msg.textContent = "保存できませんでした：" + error.message; return; }
+  $("cm-body").value = "";
+  msg.className="ok"; msg.textContent = "書き残しました。";
+  renderComments();
+}
+async function renderComments(){
+  const workId = $("cm-work").value;
+  const box = $("comments-list");
+  if (!workId){ box.innerHTML=""; $("comments-empty").classList.remove("hidden"); return; }
+  const { data, error } = await sb.from("comments")
+    .select("*").eq("work_id", workId).order("created_at",{ascending:false});
+  if (error){ console.error(error); return; }
+  const rows = data || [];
+  $("comments-empty").classList.toggle("hidden", rows.length>0);
+  box.innerHTML = rows.map(c => {
+    const when = new Date(c.created_at).toLocaleString("ja-JP",{year:"numeric",month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"});
+    return `<div class="comment-item">
+      <div class="head">
+        <span class="when">${when}</span>
+        <button class="btn btn-ghost btn-sm" onclick="deleteComment('${c.id}')">削除</button>
+      </div>
+      <div class="body">${esc(c.body)}</div>
+    </div>`;
+  }).join("");
+}
+async function deleteComment(id){
+  if (!confirm("このコメントを削除しますか？")) return;
+  const { error } = await sb.from("comments").delete().eq("id", id);
+  if (error){ alert("削除できませんでした：" + error.message); return; }
+  renderComments();
+}
+</script>
+</body>
+</html>
