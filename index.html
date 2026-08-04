@@ -104,8 +104,14 @@ input,select,textarea{font-family:inherit;font-size:1rem;color:var(--sumi)}
 .hidden{display:none!important}
 
 /* ===== ログイン画面 ===== */
-#auth-screen{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:1.5rem}
-.auth-box{width:100%;max-width:400px}
+#auth-screen{
+  min-height:100dvh;display:flex;align-items:center;justify-content:center;
+  padding:calc(env(safe-area-inset-top) + 1.5rem) 1.5rem calc(env(safe-area-inset-bottom) + 1.5rem);
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
+}
+.auth-box{width:100%;max-width:400px;margin:auto}
+/* 入力を確実に受け付ける（アプリ形式で開いた場合の対策） */
+input,textarea{-webkit-user-select:text;user-select:text;touch-action:manipulation}
 .auth-title{
   font-family:var(--maru);text-align:center;margin-bottom:1.8rem;
   font-size:2.4rem;font-weight:700;letter-spacing:.3em;text-indent:.3em;color:var(--sumi);
@@ -116,7 +122,6 @@ input,select,textarea{font-family:inherit;font-size:1rem;color:var(--sumi)}
   border-radius:999px;transition:background .15s;
 }
 .auth-tabs button.active{color:var(--kaze-deep);background:#fff;font-weight:700;box-shadow:0 1px 5px rgba(58,66,63,.08)}
-.master-note{margin-top:1rem;text-align:center;font-size:.75rem;color:var(--sumi-soft)}
 
 /* ===== トップバー ===== */
 .topbar{
@@ -383,15 +388,14 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
       </div>
       <div class="field">
         <label for="auth-email">メールアドレス</label>
-        <input id="auth-email" type="email" autocomplete="email">
+        <input id="auth-email" type="email" inputmode="email" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next">
       </div>
       <div class="field">
         <label for="auth-pass">パスワード</label>
-        <input id="auth-pass" type="password" autocomplete="current-password" placeholder="6文字以上">
+        <input id="auth-pass" type="password" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="go">
       </div>
       <button id="auth-submit" class="btn btn-primary btn-block" type="button">ログイン</button>
       <p id="auth-msg" class="err"></p>
-      <p class="master-note">マスターアカウント：michihari.natori.note@gmail.com</p>
     </div>
   </div>
 </div>
@@ -752,6 +756,13 @@ function bindAuth(){
   $("tab-signup").onclick = () => setAuthMode("signup");
   $("auth-submit").onclick = doAuth;
   $("auth-pass").addEventListener("keydown", e => { if(e.key==="Enter") doAuth(); });
+  $("auth-email").addEventListener("keydown", e => { if(e.key==="Enter") $("auth-pass").focus(); });
+  // アプリ形式（ホーム画面から起動）でキーボードが入力欄を覆わないようにする
+  ["auth-email","auth-pass"].forEach(id => {
+    $(id).addEventListener("focus", () => {
+      setTimeout(() => $(id).scrollIntoView({ block:"center", behavior:"smooth" }), 300);
+    });
+  });
 }
 function setAuthMode(m){
   authMode = m;
