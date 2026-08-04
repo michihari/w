@@ -11,9 +11,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="執筆帖">
 <meta name="theme-color" content="#F5F7F5">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23F5F7F5'/%3E%3Cpath d='M28 118 C 62 96 90 132 118 110 S 158 92 168 100' fill='none' stroke='%234E8B84' stroke-width='11' stroke-linecap='round'/%3E%3Cpath d='M28 138 C 62 116 90 152 118 130' fill='none' stroke='%23B8A990' stroke-width='5' stroke-dasharray='1 13' stroke-linecap='round'/%3E%3Cpath d='M96 46 C 116 38 132 48 150 40' fill='none' stroke='%234E8B84' stroke-opacity='.5' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23F5F7F5'/%3E%3Cpath d='M10 42 C 22 34 32 46 42 38 S 54 32 58 35' fill='none' stroke='%234E8B84' stroke-width='4.5' stroke-linecap='round'/%3E%3Cpath d='M34 17 C 42 14 48 18 54 15' fill='none' stroke='%234E8B84' stroke-opacity='.5' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E">
-<link id="manifest-link" rel="manifest" href="">
+<link rel="apple-touch-icon" href="./icon-180.png">
+<link rel="icon" href="./icon-192.png">
+<link rel="manifest" href="./manifest.webmanifest">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -231,15 +231,48 @@ main{max-width:760px;margin:0 auto;padding:1.4rem 1rem 3rem}
 .list-table td.num{text-align:right;font-family:var(--maru);font-weight:700;white-space:nowrap}
 .list-table tr:last-child td{border-bottom:none}
 
-/* 書斎 */
-.work-item{display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding:.85rem .2rem;border-bottom:1px solid var(--line)}
-.work-item:last-child{border-bottom:none}
-.work-item .info{min-width:0}
-.work-item .name{font-family:var(--maru);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.work-item .meta{font-size:.75rem;color:var(--sumi-soft);margin-top:.3rem;display:flex;align-items:center;gap:.55rem;flex-wrap:wrap}
-.work-actions{display:flex;gap:.35rem;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
+
+/* 書斎：絞り込み */
+.filter-row{display:flex;gap:.35rem;background:var(--kiri);border-radius:999px;padding:.28rem}
+.filter-row button{
+  flex:1;padding:.5rem 0;border-radius:999px;border:none;background:none;
+  color:var(--sumi-soft);font-size:.84rem;letter-spacing:.06em;transition:background .15s,color .15s;
+}
+.filter-row button.active{background:#fff;color:var(--kaze-deep);font-weight:700;box-shadow:0 1px 5px rgba(58,66,63,.08)}
+
+/* 書斎：作品カード */
+.work-card{
+  background:var(--shiro);border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:1.05rem 1.15rem;margin-bottom:.8rem;
+  border-left:4px solid var(--kaze);
+}
+.work-card.done{border-left-color:var(--michi)}
+.work-card .name{
+  font-family:var(--maru);font-weight:700;font-size:1.12rem;line-height:1.5;
+  color:var(--sumi);overflow-wrap:anywhere;
+}
+.work-top{display:flex;align-items:flex-start;justify-content:space-between;gap:.7rem}
+.status-chip{
+  flex-shrink:0;font-size:.68rem;font-weight:700;padding:.22rem .65rem;border-radius:999px;
+  background:var(--kaze-mist);color:var(--kaze-deep);
+}
+.status-chip.done{background:var(--michi-soft);color:#8A7A5F}
+.work-meta{
+  display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;
+  font-size:.76rem;color:var(--sumi-soft);margin-top:.6rem;
+}
+.work-figs{
+  display:flex;gap:1.3rem;flex-wrap:wrap;margin-top:.7rem;
+  padding-top:.7rem;border-top:1px solid var(--line);
+}
+.work-figs .fig{display:flex;flex-direction:column;gap:.1rem}
+.work-figs .fig .k{font-size:.68rem;color:var(--sumi-soft);letter-spacing:.05em}
+.work-figs .fig .v{font-family:var(--maru);font-weight:700;font-size:1.02rem}
+.work-figs .fig .v small{font-size:.68rem;font-weight:400;color:var(--sumi-soft);margin-left:.12rem}
+.work-figs .fig.today .v{color:var(--midori)}
+.work-actions{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.9rem}
+.work-actions .btn{flex:0 1 auto}
 .cm-count{color:var(--kaze-deep);font-weight:700}
-.today-add{color:var(--midori);font-weight:700}
 
 /* コメント */
 .comment-item{padding:.8rem 0;border-bottom:1px solid var(--line)}
@@ -420,9 +453,26 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
       </div>
       <div class="card">
         <h2>作品一覧</h2>
-        <div id="works-list"></div>
-        <p id="works-empty" class="muted">まだ作品がありません。上からつくってください。</p>
+        <div class="filter-row" id="status-tabs">
+          <button data-s="執筆中" class="active" type="button">執筆中</button>
+          <button data-s="完成" type="button">完成</button>
+          <button data-s="all" type="button">すべて</button>
+        </div>
+        <div class="field" style="margin:.85rem 0 .2rem">
+          <label for="cat-filter">ジャンル</label>
+          <select id="cat-filter">
+            <option value="all">すべてのジャンル</option>
+            <option value="小説">小説</option>
+            <option value="紀行文">紀行文</option>
+            <option value="哲学">哲学</option>
+            <option value="論文">論文</option>
+            <option value="詩">詩</option>
+            <option value="俳句">俳句</option>
+          </select>
+        </div>
       </div>
+      <div id="works-list"></div>
+      <p id="works-empty" class="muted" style="padding:.5rem .2rem">まだ作品がありません。上からつくってください。</p>
     </section>
 
     <!-- ===== 統計 ===== -->
@@ -618,17 +668,12 @@ const PFX = "shippitsu_";
 const T_WORKS = PFX+"works", T_RECORDS = PFX+"records", T_COMMENTS = PFX+"comments",
       T_GOALS = PFX+"goals", T_PROFILES = PFX+"profiles";
 
-/* ---- PWAマニフェスト ---- */
-(function(){
-  const icon = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='110' fill='%23F5F7F5'/%3E%3Cpath d='M80 336 C 176 272 256 376 336 312 S 448 260 476 284' fill='none' stroke='%234E8B84' stroke-width='30' stroke-linecap='round'/%3E%3Cpath d='M80 392 C 176 328 256 432 336 368' fill='none' stroke='%23B8A990' stroke-width='14' stroke-dasharray='2 38' stroke-linecap='round'/%3E%3Cpath d='M272 130 C 328 108 372 136 424 112' fill='none' stroke='%234E8B84' stroke-opacity='.5' stroke-width='17' stroke-linecap='round'/%3E%3C/svg%3E";
-  const manifest = {
-    name:"執筆帖", short_name:"執筆帖", display:"standalone", start_url:".", scope:".",
-    background_color:"#F5F7F5", theme_color:"#F5F7F5",
-    icons:[{src:icon, sizes:"512x512", type:"image/svg+xml", purpose:"any"}]
-  };
-  document.getElementById("manifest-link").href =
-    URL.createObjectURL(new Blob([JSON.stringify(manifest)],{type:"application/json"}));
-})();
+/* ---- サービスワーカー登録（ホーム画面からアプリとして起動するため） ---- */
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(err => console.warn("SW未登録", err));
+  });
+}
 
 /* ---- ユーティリティ ---- */
 const $ = id => document.getElementById(id);
@@ -643,6 +688,7 @@ const dayStr  = t => new Date(t).toLocaleDateString("ja-JP",{year:"numeric",mont
 let sb = null, currentUser = null, isMaster = false;
 let works = [], chart = null, currentPeriod = "week";
 let commentCounts = {}, todayByWork = {};
+let workFilterStatus = "執筆中", workFilterCat = "all";
 let todayGoal = null, todayChars = 0, todayHaiku = 0;
 let modalWorkId = null, recModalWorkId = null;
 
@@ -721,6 +767,14 @@ function bindApp(){
   $("btn-save-record").onclick = saveRecord;
   $("rec-work").onchange = updateAmountLabel;
   $("btn-add-work").onclick = addWork;
+  document.querySelectorAll("#status-tabs button").forEach(b => {
+    b.onclick = () => {
+      workFilterStatus = b.dataset.s;
+      document.querySelectorAll("#status-tabs button").forEach(x => x.classList.toggle("active", x===b));
+      renderWorksList();
+    };
+  });
+  $("cat-filter").onchange = () => { workFilterCat = $("cat-filter").value; renderWorksList(); };
   $("cm-filter").onchange = renderComments;
 
   $("goal-badge").onclick = openGoalModal;
@@ -921,7 +975,10 @@ async function loadWorks(){
   await renderWorksList();
 }
 function fillWorkSelects(){
-  const opts = works.map(w => `<option value="${w.id}">${esc(w.name)}（${esc(w.category)}）</option>`).join("");
+  const opts = works.map(w => {
+    const done = (w.status||"執筆中") === "完成";
+    return `<option value="${w.id}">${esc(w.name)}（${esc(w.category)}${done?"・完成":""}）</option>`;
+  }).join("");
   $("rec-work").innerHTML = `<option value="">— 作品を選択 —</option>` + opts;
   const cur = $("cm-filter").value;
   $("cm-filter").innerHTML = `<option value="">すべての作品</option>` + opts;
@@ -938,15 +995,19 @@ async function addWork(){
   const name = $("work-name").value.trim(), category = $("work-cat").value;
   const msg = $("work-msg"); msg.className="err"; msg.textContent = "";
   if (!name){ msg.textContent = "作品名を入力してください。"; return; }
-  const { error } = await sb.from(T_WORKS).insert({ user_id: currentUser.id, name, category });
+  const { error } = await sb.from(T_WORKS).insert({ user_id: currentUser.id, name, category, status: "執筆中" });
   if (error){ msg.textContent = translateWriteError(error.message); return; }
   $("work-name").value = "";
   await loadWorks();
 }
 async function renderWorksList(){
   const box = $("works-list");
-  $("works-empty").classList.toggle("hidden", works.length>0);
-  if (!works.length){ box.innerHTML=""; return; }
+  if (!works.length){
+    box.innerHTML = "";
+    $("works-empty").textContent = "まだ作品がありません。上からつくってください。";
+    $("works-empty").classList.remove("hidden");
+    return;
+  }
   const [{ data: recs }, { data: cms }] = await Promise.all([
     sb.from(T_RECORDS).select("work_id, amount").eq("user_id", currentUser.id),
     sb.from(T_COMMENTS).select("work_id").eq("user_id", currentUser.id)
@@ -956,26 +1017,60 @@ async function renderWorksList(){
   commentCounts = {};
   (cms||[]).forEach(c => commentCounts[c.work_id] = (commentCounts[c.work_id]||0) + 1);
 
-  box.innerHTML = works.map(w => {
+  const shown = works.filter(w => {
+    const st = w.status || "執筆中";
+    if (workFilterStatus !== "all" && st !== workFilterStatus) return false;
+    if (workFilterCat !== "all" && w.category !== workFilterCat) return false;
+    return true;
+  });
+  if (!shown.length){
+    box.innerHTML = "";
+    $("works-empty").textContent = "この条件に当てはまる作品はありません。";
+    $("works-empty").classList.remove("hidden");
+    return;
+  }
+  $("works-empty").classList.add("hidden");
+
+  box.innerHTML = shown.map(w => {
+    const st = w.status || "執筆中";
+    const done = st === "完成";
+    const unit = unitOf(w.category);
     const n = commentCounts[w.id] || 0, t = todayByWork[w.id] || 0;
-    return `<div class="work-item">
-      <div class="info">
+    return `<div class="work-card ${done?"done":""}">
+      <div class="work-top">
         <div class="name">${esc(w.name)}</div>
-        <div class="meta">
-          <span class="tag ${w.category==="俳句"?"tag-haiku":""}">${esc(w.category)}</span>
-          <span>累計 ${fmt(totals[w.id]||0)} ${unitOf(w.category)}</span>
-          ${t ? `<span class="today-add">本日 ${fmt(t)} ${unitOf(w.category)}</span>` : ""}
-          ${n ? `<span class="cm-count">コメント ${n}</span>` : ""}
+        <span class="status-chip ${done?"done":""}">${st}</span>
+      </div>
+      <div class="work-meta">
+        <span class="tag ${w.category==="俳句"?"tag-haiku":""}">${esc(w.category)}</span>
+        ${n ? `<span class="cm-count">コメント ${n}</span>` : ""}
+      </div>
+      <div class="work-figs">
+        <div class="fig">
+          <span class="k">累計</span>
+          <span class="v">${fmt(totals[w.id]||0)}<small>${unit}</small></span>
         </div>
+        ${t ? `<div class="fig today">
+          <span class="k">本日</span>
+          <span class="v">${fmt(t)}<small>${unit}</small></span>
+        </div>` : ""}
       </div>
       <div class="work-actions">
-        <button class="btn btn-shu btn-sm" onclick="openRecModal('${w.id}')">${w.category==="俳句"?"句数を追加":"文字数を追加"}</button>
+        <button class="btn btn-primary btn-sm" onclick="openRecModal('${w.id}')">${w.category==="俳句"?"句数を追加":"文字数を追加"}</button>
         <button class="btn btn-ghost btn-sm" onclick="openCommentModal('${w.id}')">コメント</button>
+        <button class="btn btn-ghost btn-sm" onclick="toggleStatus('${w.id}')">${done?"執筆中に戻す":"完成にする"}</button>
         <button class="btn btn-ghost btn-sm" onclick="renameWork('${w.id}')">改題</button>
         <button class="btn btn-ghost btn-sm" onclick="deleteWork('${w.id}')">削除</button>
       </div>
     </div>`;
   }).join("");
+}
+async function toggleStatus(id){
+  const w = works.find(x=>x.id===id); if(!w) return;
+  const next = (w.status||"執筆中") === "完成" ? "執筆中" : "完成";
+  const { error } = await sb.from(T_WORKS).update({ status: next }).eq("id", id);
+  if (error){ alert("変更できませんでした：" + error.message); return; }
+  await loadWorks();
 }
 async function renameWork(id){
   const w = works.find(x=>x.id===id); if(!w) return;
