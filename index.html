@@ -240,39 +240,60 @@ main{max-width:760px;margin:0 auto;padding:1.4rem 1rem 3rem}
 }
 .filter-row button.active{background:#fff;color:var(--kaze-deep);font-weight:700;box-shadow:0 1px 5px rgba(58,66,63,.08)}
 
-/* 書斎：作品カード */
+
+/* ジャンルのタッチ選択 */
+.chip-row{display:flex;flex-wrap:wrap;gap:.4rem}
+.chip-row button{
+  padding:.45rem .95rem;border-radius:999px;border:1.5px solid var(--line);
+  background:#fff;color:var(--sumi-soft);font-size:.84rem;transition:background .15s,color .15s,border-color .15s;
+}
+.chip-row button.active{background:var(--kaze);border-color:var(--kaze);color:#fff;font-weight:700}
+
+/* 作品カード（コンパクト・タップで開く） */
 .work-card{
-  background:var(--shiro);border-radius:var(--radius);box-shadow:var(--shadow);
-  padding:1.05rem 1.15rem;margin-bottom:.8rem;
-  border-left:4px solid var(--kaze);
+  width:100%;text-align:left;display:block;
+  background:var(--shiro);border:none;border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:.85rem 1rem .8rem;margin-bottom:.6rem;
+  border-left:4px solid var(--kaze);cursor:pointer;
+  transition:transform .1s;
 }
+.work-card:active{transform:scale(.99)}
+.work-card:focus-visible{outline:2px solid var(--kaze);outline-offset:2px}
 .work-card.done{border-left-color:var(--michi)}
+.work-top{display:flex;align-items:center;justify-content:space-between;gap:.7rem}
 .work-card .name{
-  font-family:var(--maru);font-weight:700;font-size:1.12rem;line-height:1.5;
-  color:var(--sumi);overflow-wrap:anywhere;
+  font-family:var(--maru);font-weight:700;font-size:1.05rem;line-height:1.45;
+  color:var(--sumi);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;
 }
-.work-top{display:flex;align-items:flex-start;justify-content:space-between;gap:.7rem}
 .status-chip{
-  flex-shrink:0;font-size:.68rem;font-weight:700;padding:.22rem .65rem;border-radius:999px;
+  flex-shrink:0;font-size:.66rem;font-weight:700;padding:.2rem .6rem;border-radius:999px;
   background:var(--kaze-mist);color:var(--kaze-deep);
 }
 .status-chip.done{background:var(--michi-soft);color:#8A7A5F}
 .work-meta{
   display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;
-  font-size:.76rem;color:var(--sumi-soft);margin-top:.6rem;
+  font-size:.76rem;color:var(--sumi-soft);margin-top:.42rem;
 }
-.work-figs{
-  display:flex;gap:1.3rem;flex-wrap:wrap;margin-top:.7rem;
-  padding-top:.7rem;border-top:1px solid var(--line);
-}
+.work-meta b{font-family:var(--maru);color:var(--sumi)}
+.today-add{color:var(--midori);font-weight:700}
+.cm-count{color:var(--kaze-deep);font-weight:700}
+
+/* 作品の数値表示 */
+.work-figs{display:flex;gap:1.3rem;flex-wrap:wrap;margin-bottom:.2rem}
 .work-figs .fig{display:flex;flex-direction:column;gap:.1rem}
 .work-figs .fig .k{font-size:.68rem;color:var(--sumi-soft);letter-spacing:.05em}
-.work-figs .fig .v{font-family:var(--maru);font-weight:700;font-size:1.02rem}
+.work-figs .fig .v{font-family:var(--maru);font-weight:700;font-size:1.05rem}
 .work-figs .fig .v small{font-size:.68rem;font-weight:400;color:var(--sumi-soft);margin-left:.12rem}
 .work-figs .fig.today .v{color:var(--midori)}
-.work-actions{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.9rem}
-.work-actions .btn{flex:0 1 auto}
-.cm-count{color:var(--kaze-deep);font-weight:700}
+
+/* 作品詳細：数追加の行 */
+.wm-addrow{display:flex;gap:.5rem}
+.wm-addrow input{
+  flex:1;min-width:0;padding:.7rem .85rem;border:1.5px solid var(--line);
+  border-radius:12px;background:#fff;outline:none;
+}
+.wm-addrow input:focus{border-color:var(--kaze);box-shadow:0 0 0 3px var(--kaze-mist)}
+.wm-addrow .btn{flex-shrink:0}
 
 /* コメント */
 .comment-item{padding:.8rem 0;border-bottom:1px solid var(--line)}
@@ -354,7 +375,7 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
       </div>
       <div class="field">
         <label for="auth-email">メールアドレス</label>
-        <input id="auth-email" type="email" autocomplete="email" placeholder="example@mail.com">
+        <input id="auth-email" type="email" autocomplete="email">
       </div>
       <div class="field">
         <label for="auth-pass">パスワード</label>
@@ -407,7 +428,7 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
         </div>
         <div class="field">
           <label for="rec-amount" id="rec-amount-label">文字数</label>
-          <input id="rec-amount" type="number" min="0" step="1" inputmode="numeric" placeholder="0">
+          <input id="rec-amount" type="number" min="0" step="1" inputmode="numeric">
         </div>
         <button id="btn-save-record" class="btn btn-shu btn-block" type="button">記録する</button>
         <p id="rec-msg" class="err"></p>
@@ -435,18 +456,19 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
         <h2>新しい作品をつくる</h2>
         <div class="field">
           <label for="work-name">作品名</label>
-          <input id="work-name" type="text" placeholder="例：北の紀行、冬の句帖 …">
+          <input id="work-name" type="text">
         </div>
         <div class="field">
-          <label for="work-cat">項目</label>
-          <select id="work-cat">
-            <option value="小説">小説</option>
-            <option value="紀行文">紀行文</option>
-            <option value="哲学">哲学</option>
-            <option value="論文">論文</option>
-            <option value="詩">詩</option>
-            <option value="俳句">俳句（句数で記録）</option>
-          </select>
+          <label>ジャンル</label>
+          <div class="chip-row" id="work-cat-chips">
+            <button data-c="小説" class="active" type="button">小説</button>
+            <button data-c="紀行文" type="button">紀行文</button>
+            <button data-c="哲学" type="button">哲学</button>
+            <button data-c="論文" type="button">論文</button>
+            <button data-c="詩" type="button">詩</button>
+            <button data-c="俳句" type="button">俳句</button>
+          </div>
+          <p class="muted" id="work-cat-note" style="margin-top:.4rem;min-height:1.1em"></p>
         </div>
         <button id="btn-add-work" class="btn btn-primary btn-block" type="button">作品をつくる</button>
         <p id="work-msg" class="err"></p>
@@ -458,17 +480,14 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
           <button data-s="完成" type="button">完成</button>
           <button data-s="all" type="button">すべて</button>
         </div>
-        <div class="field" style="margin:.85rem 0 .2rem">
-          <label for="cat-filter">ジャンル</label>
-          <select id="cat-filter">
-            <option value="all">すべてのジャンル</option>
-            <option value="小説">小説</option>
-            <option value="紀行文">紀行文</option>
-            <option value="哲学">哲学</option>
-            <option value="論文">論文</option>
-            <option value="詩">詩</option>
-            <option value="俳句">俳句</option>
-          </select>
+        <div class="chip-row" id="cat-filter-chips" style="margin-top:.7rem">
+          <button data-c="all" class="active" type="button">すべて</button>
+          <button data-c="小説" type="button">小説</button>
+          <button data-c="紀行文" type="button">紀行文</button>
+          <button data-c="哲学" type="button">哲学</button>
+          <button data-c="論文" type="button">論文</button>
+          <button data-c="詩" type="button">詩</button>
+          <button data-c="俳句" type="button">俳句</button>
         </div>
       </div>
       <div id="works-list"></div>
@@ -588,14 +607,14 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
       <div class="field">
         <label for="goal-chars">文字数の目標</label>
         <div class="input-unit">
-          <input id="goal-chars" type="number" min="0" step="100" inputmode="numeric" placeholder="2000">
+          <input id="goal-chars" type="number" min="0" step="100" inputmode="numeric">
           <span>字</span>
         </div>
       </div>
       <div class="field">
         <label for="goal-haiku">句数の目標</label>
         <div class="input-unit">
-          <input id="goal-haiku" type="number" min="0" step="1" inputmode="numeric" placeholder="3">
+          <input id="goal-haiku" type="number" min="0" step="1" inputmode="numeric">
           <span>句</span>
         </div>
       </div>
@@ -607,47 +626,54 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
   </div>
 </div>
 
-<!-- ============ 記録追加モーダル（書斎から） ============ -->
-<div id="rec-modal" class="modal-back hidden">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="rec-modal-title">
+<!-- ============ 作品詳細モーダル ============ -->
+<div id="work-modal" class="modal-back hidden">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="wm-title">
     <div class="modal-head">
       <div>
-        <div class="t" id="rec-modal-title"></div>
-        <div class="s" id="rec-modal-sub"></div>
+        <div class="t" id="wm-title"></div>
+        <div class="s" id="wm-sub" style="display:flex;align-items:center;gap:.45rem;flex-wrap:wrap"></div>
       </div>
-      <button class="modal-close" id="rec-modal-close" type="button">閉じる</button>
+      <button class="modal-close" id="wm-close" type="button">閉じる</button>
     </div>
-    <div class="field">
-      <label for="rec-modal-amount" id="rec-modal-label">文字数</label>
-      <input id="rec-modal-amount" type="number" min="0" step="1" inputmode="numeric" placeholder="0">
-    </div>
-    <button id="rec-modal-save" class="btn btn-shu btn-block" type="button">記録する</button>
-    <p id="rec-modal-msg" class="err"></p>
-    <h3>本日この作品に記録した分</h3>
-    <ul id="rec-modal-list" class="rec-list"></ul>
-    <p id="rec-modal-empty" class="muted">まだありません。</p>
-  </div>
-</div>
 
-<!-- ============ コメント入力モーダル（書斎から） ============ -->
-<div id="cm-modal" class="modal-back hidden">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="cm-modal-title">
-    <div class="modal-head">
-      <div>
-        <div class="t" id="cm-modal-title"></div>
-        <div class="s" id="cm-modal-sub"></div>
+    <div class="work-figs" style="border-top:none;padding-top:0;margin-top:0">
+      <div class="fig">
+        <span class="k">累計</span>
+        <span class="v" id="wm-total"></span>
       </div>
-      <button class="modal-close" id="cm-modal-close" type="button">閉じる</button>
+      <div class="fig today">
+        <span class="k">本日</span>
+        <span class="v" id="wm-today"></span>
+      </div>
     </div>
-    <div class="field">
-      <label for="cm-modal-body">コメント</label>
-      <textarea id="cm-modal-body" rows="4" placeholder="この作品についての覚え書き…"></textarea>
+
+    <h3 id="wm-add-label">文字数を追加</h3>
+    <div class="wm-addrow">
+      <input id="wm-amount" type="number" min="0" step="1" inputmode="numeric">
+      <button id="wm-add" class="btn btn-primary" type="button">追加</button>
     </div>
-    <button id="cm-modal-save" class="btn btn-primary btn-block" type="button">書き残す</button>
-    <p id="cm-modal-msg" class="err"></p>
-    <h3>この作品のコメント</h3>
-    <div id="cm-modal-list"></div>
-    <p id="cm-modal-empty" class="muted">まだコメントがありません。</p>
+    <p id="wm-add-msg" class="err" style="margin-top:.3rem"></p>
+
+    <h3>執筆履歴</h3>
+    <ul id="wm-history" class="rec-list"></ul>
+    <p id="wm-history-empty" class="muted">まだ記録がありません。</p>
+
+    <h3>コメント</h3>
+    <div class="field" style="margin-bottom:.5rem">
+      <textarea id="wm-comment" rows="3"></textarea>
+    </div>
+    <button id="wm-comment-save" class="btn btn-ghost btn-block" type="button">書き残す</button>
+    <p id="wm-comment-msg" class="err" style="margin-top:.3rem"></p>
+    <div id="wm-comments"></div>
+    <p id="wm-comments-empty" class="muted">まだコメントがありません。</p>
+
+    <h3>操作</h3>
+    <div class="work-actions" style="margin-top:.2rem">
+      <button id="wm-status" class="btn btn-ghost btn-sm" type="button"></button>
+      <button id="wm-rename" class="btn btn-ghost btn-sm" type="button">改題</button>
+      <button id="wm-delete" class="btn btn-ghost btn-sm" type="button">削除</button>
+    </div>
   </div>
 </div>
 
@@ -688,9 +714,10 @@ const dayStr  = t => new Date(t).toLocaleDateString("ja-JP",{year:"numeric",mont
 let sb = null, currentUser = null, isMaster = false;
 let works = [], chart = null, currentPeriod = "week";
 let commentCounts = {}, todayByWork = {};
-let workFilterStatus = "執筆中", workFilterCat = "all";
+let workFilterStatus = "執筆中", workFilterCat = "all", workNewCat = "小説";
+let detailWorkId = null;
 let todayGoal = null, todayChars = 0, todayHaiku = 0;
-let modalWorkId = null, recModalWorkId = null;
+
 
 /* ---- 起動 ---- */
 window.addEventListener("DOMContentLoaded", async () => {
@@ -774,7 +801,20 @@ function bindApp(){
       renderWorksList();
     };
   });
-  $("cat-filter").onchange = () => { workFilterCat = $("cat-filter").value; renderWorksList(); };
+  document.querySelectorAll("#cat-filter-chips button").forEach(b => {
+    b.onclick = () => {
+      workFilterCat = b.dataset.c;
+      document.querySelectorAll("#cat-filter-chips button").forEach(x => x.classList.toggle("active", x===b));
+      renderWorksList();
+    };
+  });
+  document.querySelectorAll("#work-cat-chips button").forEach(b => {
+    b.onclick = () => {
+      workNewCat = b.dataset.c;
+      document.querySelectorAll("#work-cat-chips button").forEach(x => x.classList.toggle("active", x===b));
+      $("work-cat-note").textContent = workNewCat==="俳句" ? "俳句は句数で記録されます。" : "";
+    };
+  });
   $("cm-filter").onchange = renderComments;
 
   $("goal-badge").onclick = openGoalModal;
@@ -783,16 +823,19 @@ function bindApp(){
   $("goal-modal-save").onclick = saveGoal;
   $("goal-modal-clear").onclick = clearGoal;
 
-  $("rec-modal-close").onclick = () => closeModal("rec-modal");
-  $("rec-modal-save").onclick = saveModalRecord;
-  $("cm-modal-close").onclick = () => closeModal("cm-modal");
-  $("cm-modal-save").onclick = saveModalComment;
+  $("wm-close").onclick = () => closeModal("work-modal");
+  $("wm-add").onclick = wmAddRecord;
+  $("wm-amount").addEventListener("keydown", e => { if(e.key==="Enter") wmAddRecord(); });
+  $("wm-comment-save").onclick = wmAddComment;
+  $("wm-status").onclick = wmToggleStatus;
+  $("wm-rename").onclick = wmRename;
+  $("wm-delete").onclick = wmDelete;
 
-  ["goal-modal","rec-modal","cm-modal"].forEach(id => {
+  ["goal-modal","work-modal"].forEach(id => {
     $(id).addEventListener("click", e => { if (e.target === $(id)) closeModal(id); });
   });
   document.addEventListener("keydown", e => {
-    if (e.key === "Escape") ["goal-modal","rec-modal","cm-modal"].forEach(closeModal);
+    if (e.key === "Escape") ["goal-modal","work-modal"].forEach(closeModal);
   });
 
   document.querySelectorAll("#period-tabs button").forEach(b => {
@@ -959,7 +1002,6 @@ async function deleteRecord(id){
   const { error } = await sb.from(T_RECORDS).delete().eq("id", id);
   if (error){ alert("取消できませんでした：" + error.message); return; }
   await refreshToday();
-  if (!$("rec-modal").classList.contains("hidden")) await renderRecModalList();
   await renderWorksList();
 }
 
@@ -989,10 +1031,9 @@ function updateAmountLabel(){
   const w = works.find(x => x.id === $("rec-work").value);
   const haiku = w && w.category === "俳句";
   $("rec-amount-label").textContent = haiku ? "句数" : "文字数";
-  $("rec-amount").placeholder = haiku ? "例：3（句）" : "例：1200（字）";
 }
 async function addWork(){
-  const name = $("work-name").value.trim(), category = $("work-cat").value;
+  const name = $("work-name").value.trim(), category = workNewCat;
   const msg = $("work-msg"); msg.className="err"; msg.textContent = "";
   if (!name){ msg.textContent = "作品名を入力してください。"; return; }
   const { error } = await sb.from(T_WORKS).insert({ user_id: currentUser.id, name, category, status: "執筆中" });
@@ -1036,33 +1077,18 @@ async function renderWorksList(){
     const done = st === "完成";
     const unit = unitOf(w.category);
     const n = commentCounts[w.id] || 0, t = todayByWork[w.id] || 0;
-    return `<div class="work-card ${done?"done":""}">
+    return `<button class="work-card ${done?"done":""}" type="button" onclick="openWorkModal('${w.id}')">
       <div class="work-top">
         <div class="name">${esc(w.name)}</div>
         <span class="status-chip ${done?"done":""}">${st}</span>
       </div>
       <div class="work-meta">
         <span class="tag ${w.category==="俳句"?"tag-haiku":""}">${esc(w.category)}</span>
+        <span>累計 <b>${fmt(totals[w.id]||0)}</b> ${unit}</span>
+        ${t ? `<span class="today-add">本日 ${fmt(t)} ${unit}</span>` : ""}
         ${n ? `<span class="cm-count">コメント ${n}</span>` : ""}
       </div>
-      <div class="work-figs">
-        <div class="fig">
-          <span class="k">累計</span>
-          <span class="v">${fmt(totals[w.id]||0)}<small>${unit}</small></span>
-        </div>
-        ${t ? `<div class="fig today">
-          <span class="k">本日</span>
-          <span class="v">${fmt(t)}<small>${unit}</small></span>
-        </div>` : ""}
-      </div>
-      <div class="work-actions">
-        <button class="btn btn-primary btn-sm" onclick="openRecModal('${w.id}')">${w.category==="俳句"?"句数を追加":"文字数を追加"}</button>
-        <button class="btn btn-ghost btn-sm" onclick="openCommentModal('${w.id}')">コメント</button>
-        <button class="btn btn-ghost btn-sm" onclick="toggleStatus('${w.id}')">${done?"執筆中に戻す":"完成にする"}</button>
-        <button class="btn btn-ghost btn-sm" onclick="renameWork('${w.id}')">改題</button>
-        <button class="btn btn-ghost btn-sm" onclick="deleteWork('${w.id}')">削除</button>
-      </div>
-    </div>`;
+    </button>`;
   }).join("");
 }
 async function toggleStatus(id){
@@ -1089,67 +1115,85 @@ async function deleteWork(id){
   await refreshToday();
 }
 
-/* ---- 書斎からの記録追加 ---- */
-async function openRecModal(workId){
+/* ---- 作品詳細モーダル ---- */
+async function openWorkModal(workId){
   const w = works.find(x=>x.id===workId); if(!w) return;
-  recModalWorkId = workId;
-  $("rec-modal-title").textContent = w.name;
-  $("rec-modal-sub").textContent = w.category + "　" + dayStr(new Date());
-  $("rec-modal-label").textContent = w.category==="俳句" ? "句数" : "文字数";
-  $("rec-modal-amount").value = "";
-  $("rec-modal-amount").placeholder = w.category==="俳句" ? "例：3" : "例：1200";
-  $("rec-modal-msg").textContent = "";
-  openModal("rec-modal");
-  await renderRecModalList();
-  $("rec-modal-amount").focus();
+  detailWorkId = workId;
+  $("wm-amount").value = "";
+  $("wm-comment").value = "";
+  $("wm-add-msg").textContent = "";
+  $("wm-comment-msg").textContent = "";
+  renderWorkModalHead();
+  openModal("work-modal");
+  await Promise.all([renderWorkHistory(), renderWorkComments()]);
 }
-async function renderRecModalList(){
-  const { data } = await sb.from(T_RECORDS).select("id, amount")
-    .eq("work_id", recModalWorkId).eq("date", todayStr()).order("created_at",{ascending:true});
-  const rows = data || [];
-  const w = works.find(x=>x.id===recModalWorkId);
-  $("rec-modal-empty").classList.toggle("hidden", rows.length>0);
-  $("rec-modal-list").innerHTML = rows.map(r => `<li>
-      <div class="rec-main"><span class="t1">${fmt(r.amount)} ${unitOf(w?w.category:"")}</span></div>
-      <button class="btn btn-ghost btn-sm" onclick="deleteRecord('${r.id}')">取消</button>
-    </li>`).join("");
+function renderWorkModalHead(){
+  const w = works.find(x=>x.id===detailWorkId); if(!w) return;
+  const st = w.status || "執筆中";
+  const done = st === "完成";
+  const unit = unitOf(w.category);
+  $("wm-title").textContent = w.name;
+  $("wm-sub").innerHTML = `<span class="tag ${w.category==="俳句"?"tag-haiku":""}">${esc(w.category)}</span>
+    <span class="status-chip ${done?"done":""}">${st}</span>`;
+  $("wm-add-label").textContent = (w.category==="俳句"?"句数":"文字数") + "を追加";
+  $("wm-status").textContent = done ? "執筆中に戻す" : "完成にする";
+  $("wm-today").innerHTML = fmt(todayByWork[w.id]||0) + `<small>${unit}</small>`;
 }
-async function saveModalRecord(){
-  const msg = $("rec-modal-msg"); msg.className="err"; msg.textContent="";
-  const amount = parseInt($("rec-modal-amount").value,10);
-  if (!(amount >= 0)){ msg.textContent = "数を入力してください。"; return; }
-  const { error } = await sb.from(T_RECORDS).insert(
-    { user_id: currentUser.id, work_id: recModalWorkId, date: todayStr(), amount });
-  if (error){ msg.textContent = translateWriteError(error.message); return; }
-  const w = works.find(x=>x.id===recModalWorkId);
-  msg.className="ok"; msg.textContent = `記録しました：${fmt(amount)}${unitOf(w?w.category:"")}`;
-  $("rec-modal-amount").value = "";
-  await refreshToday();
-  await renderRecModalList();
-  await renderWorksList();
-}
-
-/* =====================================================================
-   コメント
-   ===================================================================== */
-async function openCommentModal(workId){
-  const w = works.find(x=>x.id===workId); if(!w) return;
-  modalWorkId = workId;
-  $("cm-modal-title").textContent = w.name;
-  $("cm-modal-sub").textContent = w.category;
-  $("cm-modal-body").value = "";
-  $("cm-modal-msg").textContent = "";
-  openModal("cm-modal");
-  await renderModalComments();
-  $("cm-modal-body").focus();
-}
-async function renderModalComments(){
-  const { data, error } = await sb.from(T_COMMENTS).select("*")
-    .eq("work_id", modalWorkId).order("created_at",{ascending:false});
+async function renderWorkHistory(){
+  const w = works.find(x=>x.id===detailWorkId); if(!w) return;
+  const unit = unitOf(w.category);
+  const { data, error } = await sb.from(T_RECORDS)
+    .select("id, date, amount")
+    .eq("work_id", detailWorkId)
+    .order("date",{ascending:false}).order("created_at",{ascending:false})
+    .limit(200);
   if (error){ console.error(error); return; }
   const rows = data || [];
-  $("cm-modal-empty").classList.toggle("hidden", rows.length>0);
-  $("cm-modal-list").innerHTML = rows.map(c => `
+  const total = rows.reduce((a,r)=>a+r.amount,0);
+  $("wm-total").innerHTML = fmt(total) + `<small>${unit}</small>`;
+  $("wm-history-empty").classList.toggle("hidden", rows.length>0);
+  const today = todayStr();
+  $("wm-history").innerHTML = rows.map(r => {
+    const d = r.date === today ? "本日" :
+      new Date(r.date+"T00:00:00").toLocaleDateString("ja-JP",{year:"numeric",month:"numeric",day:"numeric"});
+    return `<li>
+      <div class="rec-main"><span class="t1">${d}</span></div>
+      <span class="rec-amt">${fmt(r.amount)}<small>${unit}</small></span>
+      <button class="btn btn-ghost btn-sm" onclick="wmDeleteRecord('${r.id}')">取消</button>
+    </li>`;
+  }).join("");
+}
+async function wmAddRecord(){
+  const msg = $("wm-add-msg"); msg.className="err"; msg.textContent="";
+  const w = works.find(x=>x.id===detailWorkId); if(!w) return;
+  const amount = parseInt($("wm-amount").value,10);
+  if (!(amount >= 0)){ msg.textContent = "数を入力してください。"; return; }
+  const { error } = await sb.from(T_RECORDS).insert(
+    { user_id: currentUser.id, work_id: detailWorkId, date: todayStr(), amount });
+  if (error){ msg.textContent = translateWriteError(error.message); return; }
+  msg.className="ok"; msg.textContent = `追加しました：${fmt(amount)}${unitOf(w.category)}`;
+  $("wm-amount").value = "";
+  await refreshToday();
+  renderWorkModalHead();
+  await renderWorkHistory();
+  await renderWorksList();
+}
+async function wmDeleteRecord(id){
+  if (!confirm("この記録を取り消しますか？")) return;
+  const { error } = await sb.from(T_RECORDS).delete().eq("id", id);
+  if (error){ alert("取消できませんでした：" + error.message); return; }
+  await refreshToday();
+  renderWorkModalHead();
+  await renderWorkHistory();
+  await renderWorksList();
+}
+async function renderWorkComments(){
+  const { data, error } = await sb.from(T_COMMENTS).select("*")
+    .eq("work_id", detailWorkId).order("created_at",{ascending:false});
+  if (error){ console.error(error); return; }
+  const rows = data || [];
+  $("wm-comments-empty").classList.toggle("hidden", rows.length>0);
+  $("wm-comments").innerHTML = rows.map(c => `
     <div class="comment-item">
       <div class="head">
         <span class="when">${whenStr(c.created_at)}</span>
@@ -1158,22 +1202,39 @@ async function renderModalComments(){
       <div class="body">${esc(c.body)}</div>
     </div>`).join("");
 }
-async function saveModalComment(){
-  const msg = $("cm-modal-msg"); msg.className="err"; msg.textContent = "";
-  const body = $("cm-modal-body").value.trim();
+async function wmAddComment(){
+  const msg = $("wm-comment-msg"); msg.className="err"; msg.textContent = "";
+  const body = $("wm-comment").value.trim();
   if (!body){ msg.textContent = "コメントを入力してください。"; return; }
-  const { error } = await sb.from(T_COMMENTS).insert({ user_id: currentUser.id, work_id: modalWorkId, body });
+  const { error } = await sb.from(T_COMMENTS).insert({ user_id: currentUser.id, work_id: detailWorkId, body });
   if (error){ msg.textContent = translateWriteError(error.message); return; }
-  $("cm-modal-body").value = "";
+  $("wm-comment").value = "";
   msg.className="ok"; msg.textContent = "書き残しました。";
-  await renderModalComments();
+  await renderWorkComments();
   await renderWorksList();
 }
+async function wmToggleStatus(){
+  await toggleStatus(detailWorkId);
+  renderWorkModalHead();
+}
+async function wmRename(){
+  await renameWork(detailWorkId);
+  renderWorkModalHead();
+}
+async function wmDelete(){
+  const before = works.length;
+  await deleteWork(detailWorkId);
+  if (works.length < before) closeModal("work-modal");
+}
+
+/* =====================================================================
+   コメント
+   ===================================================================== */
 async function deleteComment(id, inModal){
   if (!confirm("このコメントを削除しますか？")) return;
   const { error } = await sb.from(T_COMMENTS).delete().eq("id", id);
   if (error){ alert("削除できませんでした：" + error.message); return; }
-  if (inModal){ await renderModalComments(); await renderWorksList(); }
+  if (inModal){ await renderWorkComments(); await renderWorksList(); }
   else { await renderComments(); }
 }
 async function renderComments(){
