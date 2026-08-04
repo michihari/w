@@ -35,6 +35,8 @@
   --michi-soft:rgba(184,169,144,.16);
   --aka:#D95F55;             /* 未達の赤 */
   --aka-mist:rgba(217,95,85,.1);
+  --ai:#2B4570;              /* 藍 — 俳句 */
+  --ai-mist:rgba(43,69,112,.1);
   --midori:#4E9C72;          /* 達成の緑 */
   --line:rgba(58,66,63,.1);
   --radius:18px;
@@ -95,7 +97,7 @@ input,select,textarea{font-family:inherit;font-size:1rem;color:var(--sumi)}
   display:inline-block;font-size:.7rem;padding:.18rem .6rem;border-radius:999px;
   border:none;color:var(--kaze-deep);background:var(--kaze-mist);font-weight:500;
 }
-.tag-haiku{color:var(--aka);background:var(--aka-mist)}
+.tag-haiku{color:var(--ai);background:var(--ai-mist)}
 .muted{color:var(--sumi-soft);font-size:.85rem}
 .err{color:var(--aka);font-size:.85rem;margin-top:.5rem;min-height:1.2em}
 .ok{color:var(--midori);font-size:.85rem;margin-top:.5rem}
@@ -181,6 +183,31 @@ main{max-width:760px;margin:0 auto;padding:1.4rem 1rem 3rem}
   font-size:.82rem;color:var(--sumi-soft);pointer-events:none;
 }
 
+/* 目標ボタン（設定後はパラメータ表示） */
+.goal-btn{
+  width:100%;display:block;text-align:left;margin-bottom:1rem;
+  background:transparent;border:1.5px solid var(--line);border-radius:999px;
+  padding:.75rem 1.4rem;color:var(--sumi-soft);font-size:.93rem;font-weight:700;
+  letter-spacing:.04em;transition:background .15s,border-radius .15s,padding .15s;
+}
+.goal-btn:active{transform:scale(.99)}
+.goal-btn:focus-visible{outline:2px solid var(--kaze);outline-offset:2px}
+.goal-btn.set{
+  background:var(--shiro);border-color:transparent;box-shadow:var(--shadow);
+  border-radius:var(--radius);padding:.95rem 1.15rem;color:var(--sumi);
+}
+.goal-btn-head{display:flex;align-items:center;justify-content:space-between;gap:.6rem}
+.goal-btn.set .goal-btn-head{margin-bottom:.7rem}
+.goal-btn-edit{font-size:.74rem;font-weight:500;color:var(--kaze-deep)}
+.goal-btn-params{display:flex;flex-direction:column;gap:.55rem}
+.gp-row{display:grid;grid-template-columns:3.2rem 1fr auto;align-items:center;gap:.6rem}
+.gp-name{font-size:.75rem;font-weight:500;color:var(--sumi-soft)}
+.gp-bar{height:7px;border-radius:99px;background:var(--michi-soft);overflow:hidden}
+.gp-bar i{display:block;height:100%;border-radius:99px;background:var(--aka);transition:width .4s ease}
+.gp-bar i.met{background:var(--midori)}
+.gp-val{font-size:.76rem;font-weight:500;color:var(--sumi-soft);white-space:nowrap}
+.gp-val b{font-family:var(--maru);font-size:.92rem;color:var(--sumi);font-weight:700}
+
 /* 記録リスト */
 .rec-list{list-style:none}
 .rec-list li{
@@ -202,7 +229,7 @@ main{max-width:760px;margin:0 auto;padding:1.4rem 1rem 3rem}
 .period-tabs button.active{background:var(--kaze);color:#fff;font-weight:700}
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-bottom:1rem}
 .stat-cell{background:#fff;border:none;border-radius:var(--radius);padding:.9rem 1rem;box-shadow:var(--shadow)}
-.stat-cell.haiku{background:linear-gradient(var(--aka-mist),var(--aka-mist)),#fff}
+.stat-cell.haiku{background:linear-gradient(var(--ai-mist),var(--ai-mist)),#fff}
 .stat-cell .lbl{font-size:.68rem;color:var(--sumi-soft);letter-spacing:.08em}
 .stat-cell .num{font-family:var(--maru);font-size:1.5rem;font-weight:700;margin-top:.25rem}
 .stat-cell .num small{font-size:.72rem;font-weight:400;color:var(--sumi-soft);margin-left:.2rem}
@@ -371,7 +398,13 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
         <p id="rec-msg" class="err"></p>
       </div>
 
-      <button id="btn-open-goal" class="btn btn-ghost btn-block" type="button" style="margin-bottom:1rem">目標を設定する</button>
+      <button id="btn-open-goal" class="goal-btn" type="button">
+        <span class="goal-btn-head">
+          <span id="goal-btn-title">目標を設定する</span>
+          <span class="goal-btn-edit" id="goal-btn-edit"></span>
+        </span>
+        <span class="goal-btn-params hidden" id="goal-btn-params"></span>
+      </button>
 
       <div class="card">
         <h2>本日の記録</h2>
@@ -771,6 +804,7 @@ async function refreshToday(){
   renderTodayList(rows);
   renderGoalBadge();
   renderGoalBars();
+  renderGoalButton();
 }
 function goalMet(){
   if (!todayGoal) return false;
@@ -815,6 +849,36 @@ function renderGoalBars(){
   if (tc) html += bar("文字数", todayChars, tc, "字");
   if (th) html += bar("句数", todayHaiku, th, "句");
   box.innerHTML = html;
+}
+function renderGoalButton(){
+  const btn = $("btn-open-goal"), params = $("goal-btn-params");
+  const tc = todayGoal ? (todayGoal.target_chars||0) : 0;
+  const th = todayGoal ? (todayGoal.target_haiku||0) : 0;
+  if (!tc && !th){
+    btn.classList.remove("set");
+    $("goal-btn-title").textContent = "目標を設定する";
+    $("goal-btn-edit").textContent = "";
+    params.classList.add("hidden");
+    params.innerHTML = "";
+    return;
+  }
+  btn.classList.add("set");
+  $("goal-btn-title").textContent = goalMet() ? "今日の目標 — 達成" : "今日の目標";
+  $("goal-btn-edit").textContent = "変更する";
+  const row = (name, cur, target, unit) => {
+    const pct = target ? Math.min(100, Math.round(cur/target*100)) : 0;
+    const met = cur >= target;
+    return `<span class="gp-row">
+      <span class="gp-name">${name}</span>
+      <span class="gp-bar"><i class="${met?"met":""}" style="width:${pct}%"></i></span>
+      <span class="gp-val"><b>${fmt(cur)}</b> / ${fmt(target)} ${unit}</span>
+    </span>`;
+  };
+  let html = "";
+  if (tc) html += row("文字数", todayChars, tc, "字");
+  if (th) html += row("句数", todayHaiku, th, "句");
+  params.innerHTML = html;
+  params.classList.remove("hidden");
 }
 function openGoalModal(){
   $("goal-modal-sub").textContent = dayStr(new Date());
@@ -1148,8 +1212,8 @@ async function renderStats(){
     type:"bar",
     data:{ labels: dispLabels, datasets:[
       { label:"文字数（字）", data:charData, backgroundColor:"rgba(78,139,132,.8)", borderRadius:6, yAxisID:"y" },
-      { label:"俳句（句）", data:haikuData, type:"line", borderColor:"#D95F55",
-        backgroundColor:"rgba(217,95,85,.25)", pointBackgroundColor:"#D95F55", tension:.25, yAxisID:"y2" }
+      { label:"俳句（句）", data:haikuData, type:"line", borderColor:"#2B4570",
+        backgroundColor:"rgba(43,69,112,.2)", pointBackgroundColor:"#2B4570", tension:.25, yAxisID:"y2" }
     ]},
     options:{
       responsive:true, maintainAspectRatio:false,
