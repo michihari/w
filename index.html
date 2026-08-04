@@ -86,7 +86,7 @@ input,select,textarea{font-family:inherit;font-size:1rem;color:var(--sumi)}
   font-size:.93rem;font-weight:700;letter-spacing:.04em;transition:filter .15s, transform .1s;
 }
 .btn:hover{filter:brightness(1.05)}
-.btn:active{transform:scale(.98)}
+.btn:active{opacity:.85}
 .btn:focus-visible{outline:2px solid var(--kaze);outline-offset:2px}
 .btn-primary{background:var(--kaze);color:#fff}
 .btn-shu{background:var(--sumi);color:#fff}
@@ -107,11 +107,16 @@ input,select,textarea{font-family:inherit;font-size:1rem;color:var(--sumi)}
 #auth-screen{
   min-height:100dvh;display:flex;align-items:center;justify-content:center;
   padding:calc(env(safe-area-inset-top) + 1.5rem) 1.5rem calc(env(safe-area-inset-bottom) + 1.5rem);
-  overflow-y:auto;-webkit-overflow-scrolling:touch;
+  overflow-y:auto;
 }
 .auth-box{width:100%;max-width:400px;margin:auto}
 /* 入力を確実に受け付ける（アプリ形式で開いた場合の対策） */
-input,textarea{-webkit-user-select:text;user-select:text;touch-action:manipulation}
+input,textarea,select{
+  -webkit-user-select:text;user-select:text;
+  -webkit-touch-callout:default;
+  pointer-events:auto;
+  font-size:16px;   /* 16px未満だと拡大や不具合の原因になる */
+}
 .auth-title{
   font-family:var(--maru);text-align:center;margin-bottom:1.8rem;
   font-size:2.4rem;font-weight:700;letter-spacing:.3em;text-indent:.3em;color:var(--sumi);
@@ -186,7 +191,7 @@ main{max-width:760px;margin:0 auto;padding:1.4rem 1rem 3rem}
   padding:.75rem 1.4rem;color:var(--sumi-soft);font-size:.93rem;font-weight:700;
   letter-spacing:.04em;transition:background .15s,border-radius .15s,padding .15s;
 }
-.goal-btn:active{transform:scale(.99)}
+.goal-btn:active{opacity:.9}
 .goal-btn:focus-visible{outline:2px solid var(--kaze);outline-offset:2px}
 .goal-btn.set{
   background:var(--shiro);border-color:transparent;box-shadow:var(--shadow);
@@ -262,7 +267,7 @@ main{max-width:760px;margin:0 auto;padding:1.4rem 1rem 3rem}
   border-left:4px solid var(--kaze);cursor:pointer;
   transition:transform .1s;
 }
-.work-card:active{transform:scale(.99)}
+.work-card:active{opacity:.85}
 .work-card:focus-visible{outline:2px solid var(--kaze);outline-offset:2px}
 .work-card.done{border-left-color:var(--michi)}
 .work-top{display:flex;align-items:center;justify-content:space-between;gap:.7rem}
@@ -332,6 +337,7 @@ main{max-width:760px;margin:0 auto;padding:1.4rem 1rem 3rem}
 .modal-back{position:fixed;inset:0;z-index:60;background:rgba(58,66,63,.35);backdrop-filter:blur(2px);display:flex;align-items:flex-end;justify-content:center}
 .modal{
   background:var(--kiri);width:100%;max-width:560px;max-height:88dvh;overflow-y:auto;
+  overscroll-behavior:contain;
   border-radius:22px 22px 0 0;padding:1.3rem 1.3rem calc(1.3rem + env(safe-area-inset-bottom));
 }
 .modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:.6rem;margin-bottom:1rem}
@@ -719,6 +725,47 @@ if ("serviceWorker" in navigator && location.protocol === "https:") {
   });
 }
 
+/* ---- 入力欄の共通対策（アプリ形式でキーボードが出ない場合の保険） ---- */
+(function(){
+  const isField = el => el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT");
+
+  // タップした入力欄に確実にフォーカスを移す
+  const forceFocus = e => {
+    const el = e.target.closest ? e.target.closest("input, textarea, select") : null;
+    if (!isField(el) || el.disabled || el.readOnly) return;
+    if (document.activeElement !== el) {
+      try { el.focus({ preventScroll: true }); } catch (_) { el.focus(); }
+    }
+  };
+  document.addEventListener("pointerup", forceFocus, true);
+  document.addEventListener("touchend", forceFocus, true);
+
+  // ラベルのタップでも入力欄を開く
+  document.addEventListener("click", e => {
+    const label = e.target.closest && e.target.closest("label[for]");
+    if (!label) return;
+    const el = document.getElementById(label.getAttribute("for"));
+    if (isField(el)) el.focus();
+  }, true);
+
+  // キーボードで隠れないよう、入力欄を画面内へ寄せる
+  document.addEventListener("focusin", e => {
+    if (!isField(e.target)) return;
+    setTimeout(() => {
+      try { e.target.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (_) {}
+    }, 250);
+  });
+
+  // モーダルの開閉で body のスクロール禁止が残らないようにする
+  const unstick = () => {
+    if (document.querySelectorAll(".modal-back:not(.hidden)").length === 0) {
+      document.body.style.overflow = "";
+    }
+  };
+  window.addEventListener("pageshow", unstick);
+  window.addEventListener("focus", unstick);
+})();
+
 /* ---- ユーティリティ ---- */
 const $ = id => document.getElementById(id);
 const fmt = n => Number(n||0).toLocaleString("ja-JP");
@@ -757,12 +804,6 @@ function bindAuth(){
   $("auth-submit").onclick = doAuth;
   $("auth-pass").addEventListener("keydown", e => { if(e.key==="Enter") doAuth(); });
   $("auth-email").addEventListener("keydown", e => { if(e.key==="Enter") $("auth-pass").focus(); });
-  // アプリ形式（ホーム画面から起動）でキーボードが入力欄を覆わないようにする
-  ["auth-email","auth-pass"].forEach(id => {
-    $(id).addEventListener("focus", () => {
-      setTimeout(() => $(id).scrollIntoView({ block:"center", behavior:"smooth" }), 300);
-    });
-  });
 }
 function setAuthMode(m){
   authMode = m;
