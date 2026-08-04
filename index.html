@@ -172,6 +172,15 @@ main{max-width:760px;margin:0 auto;padding:1.4rem 1rem 3rem}
 .gbar span{display:block;height:100%;border-radius:99px;background:var(--aka);transition:width .4s ease}
 .gbar span.met{background:var(--midori)}
 
+/* 目標の入力欄 */
+.goal-fields{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.input-unit{position:relative}
+.input-unit input{padding-right:2.2rem}
+.input-unit span{
+  position:absolute;right:.9rem;top:50%;transform:translateY(-50%);
+  font-size:.82rem;color:var(--sumi-soft);pointer-events:none;
+}
+
 /* 記録リスト */
 .rec-list{list-style:none}
 .rec-list li{
@@ -346,7 +355,6 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
             <p class="muted" id="goal-none">目標がまだありません。設定すると進み具合が出ます。</p>
           </div>
         </div>
-        <button id="btn-open-goal" class="btn btn-ghost btn-block" type="button" style="margin-top:.9rem">目標を設定する</button>
       </div>
 
       <div class="card">
@@ -362,6 +370,8 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
         <button id="btn-save-record" class="btn btn-shu btn-block" type="button">記録する</button>
         <p id="rec-msg" class="err"></p>
       </div>
+
+      <button id="btn-open-goal" class="btn btn-ghost btn-block" type="button" style="margin-bottom:1rem">目標を設定する</button>
 
       <div class="card">
         <h2>本日の記録</h2>
@@ -509,15 +519,23 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
       </div>
       <button class="modal-close" id="goal-modal-close" type="button">閉じる</button>
     </div>
-    <div class="field">
-      <label for="goal-chars">文字数の目標（字）</label>
-      <input id="goal-chars" type="number" min="0" step="100" inputmode="numeric" placeholder="例：2000">
+    <div class="goal-fields">
+      <div class="field">
+        <label for="goal-chars">文字数の目標</label>
+        <div class="input-unit">
+          <input id="goal-chars" type="number" min="0" step="100" inputmode="numeric" placeholder="2000">
+          <span>字</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="goal-haiku">句数の目標</label>
+        <div class="input-unit">
+          <input id="goal-haiku" type="number" min="0" step="1" inputmode="numeric" placeholder="3">
+          <span>句</span>
+        </div>
+      </div>
     </div>
-    <div class="field">
-      <label for="goal-haiku">句数の目標（句）</label>
-      <input id="goal-haiku" type="number" min="0" step="1" inputmode="numeric" placeholder="例：3">
-    </div>
-    <p class="muted" style="margin-bottom:.9rem">使わないほうは空欄か 0 のままで構いません。</p>
+    <p class="muted" style="margin-bottom:.9rem">使わないほうは空欄のままで構いません。両方に入れると、どちらも達成したときに緑になります。</p>
     <button id="goal-modal-save" class="btn btn-primary btn-block" type="button">目標を決める</button>
     <button id="goal-modal-clear" class="btn btn-ghost btn-block" type="button" style="margin-top:.5rem">目標を取り消す</button>
     <p id="goal-modal-msg" class="err"></p>
