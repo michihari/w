@@ -20,7 +20,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0"></script>
 
 <style>
 :root{
@@ -447,11 +447,16 @@ const SUPABASE_ANON = "ここにanon key";</pre>
 /* =====================================================================
    ▼▼▼ Supabase 接続設定（ここを書き換えてください） ▼▼▼
    ===================================================================== */
-const SUPABASE_URL  = "YOUR_SUPABASE_URL";   // 例: https://xxxx.supabase.co
-const SUPABASE_ANON = "YOUR_SUPABASE_ANON_KEY";
+const SUPABASE_URL  = "https://tstbqfkwnpntabdmksfm.supabase.co";
+const SUPABASE_ANON = "sb_publishable_26nApeSSefrof6QEa0YIhA_vZ6fYqtr";
 /* ===================================================================== */
 
 const MASTER_EMAIL = "michihari.natori.note@gmail.com";
+
+/* 他プロジェクトと同じSupabaseを共用するためのテーブル接頭辞。
+   setup.sql のテーブル名と必ず一致させてください。 */
+const PFX = "shippitsu_";
+const T_WORKS = PFX + "works", T_RECORDS = PFX + "records", T_COMMENTS = PFX + "comments";
 const CATEGORIES = ["小説","紀行文","哲学","論文","詩","俳句"];
 
 /* ---- PWAマニフェスト（インライン生成：ホーム画面追加でアプリ風に） ---- */
@@ -599,7 +604,7 @@ function showPage(p){
    書斎（作品管理）
    ===================================================================== */
 async function loadWorks(){
-  const { data, error } = await sb.from("works").select("*").order("created_at",{ascending:true});
+  const { data, error } = await sb.from(T_WORKS).select("*").order("created_at",{ascending:true});
   if (error){ console.error(error); return; }
   works = data || [];
   fillWorkSelects();
@@ -623,7 +628,7 @@ async function addWork(){
   const category = $("work-cat").value;
   const msg = $("work-msg"); msg.textContent = "";
   if (!name){ msg.textContent = "作品名を入力してください。"; return; }
-  const { error } = await sb.from("works").insert({ user_id: currentUser.id, name, category });
+  const { error } = await sb.from(T_WORKS).insert({ user_id: currentUser.id, name, category });
   if (error){ msg.textContent = "保存できませんでした：" + error.message; return; }
   $("work-name").value = "";
   await loadWorks();
@@ -633,7 +638,7 @@ async function renderWorksList(){
   $("works-empty").classList.toggle("hidden", works.length>0);
   if (!works.length){ box.innerHTML=""; return; }
 
-  const { data: recs } = await sb.from("records").select("work_id, amount");
+  const { data: recs } = await sb.from(T_RECORDS).select("work_id, amount");
   const totals = {};
   (recs||[]).forEach(r => totals[r.work_id] = (totals[r.work_id]||0) + r.amount);
 
@@ -656,14 +661,14 @@ async function renameWork(id){
   const w = works.find(x=>x.id===id); if(!w) return;
   const name = prompt("新しい作品名", w.name);
   if (!name || !name.trim()) return;
-  const { error } = await sb.from("works").update({ name: name.trim() }).eq("id", id);
+  const { error } = await sb.from(T_WORKS).update({ name: name.trim() }).eq("id", id);
   if (error) alert("変更できませんでした：" + error.message);
   await loadWorks();
 }
 async function deleteWork(id){
   const w = works.find(x=>x.id===id); if(!w) return;
   if (!confirm(`「${w.name}」を削除します。\nこの作品の記録とコメントも消えます。よろしいですか？`)) return;
-  const { error } = await sb.from("works").delete().eq("id", id);
+  const { error } = await sb.from(T_WORKS).delete().eq("id", id);
   if (error){ alert("削除できませんでした：" + error.message); return; }
   await loadWorks();
   await renderTodayList();
@@ -680,7 +685,7 @@ async function saveRecord(){
   if (!date){ msg.textContent = "日付を選んでください。"; return; }
   if (!workId){ msg.textContent = "作品を選んでください。まだ無ければ「書斎」で登録できます。"; return; }
   if (!(amount >= 0)){ msg.textContent = "数を入力してください。"; return; }
-  const { error } = await sb.from("records").insert({ user_id: currentUser.id, work_id: workId, date, amount });
+  const { error } = await sb.from(T_RECORDS).insert({ user_id: currentUser.id, work_id: workId, date, amount });
   if (error){ msg.textContent = "保存できませんでした：" + error.message; return; }
   const w = works.find(x=>x.id===workId);
   msg.className = "ok";
@@ -690,8 +695,8 @@ async function saveRecord(){
 }
 async function renderTodayList(){
   const date = $("rec-date").value || todayStr();
-  const { data, error } = await sb.from("records")
-    .select("id, amount, work_id, works(name, category)")
+  const { data, error } = await sb.from(T_RECORDS)
+    .select(`id, amount, work_id, works:${T_WORKS}(name, category)`)
     .eq("date", date).order("created_at",{ascending:true});
   const list = $("rec-today-list");
   if (error){ console.error(error); return; }
@@ -712,7 +717,7 @@ async function renderTodayList(){
 }
 async function deleteRecord(id){
   if (!confirm("この記録を取り消しますか？")) return;
-  const { error } = await sb.from("records").delete().eq("id", id);
+  const { error } = await sb.from(T_RECORDS).delete().eq("id", id);
   if (error){ alert("取消できませんでした：" + error.message); return; }
   renderTodayList();
 }
@@ -732,7 +737,7 @@ function dstr(d){
   return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 }
 async function renderStats(){
-  let q = sb.from("records").select("date, amount, work_id, works(name, category)");
+  let q = sb.from(T_RECORDS).select(`date, amount, work_id, works:${T_WORKS}(name, category)`);
   const from = periodRange(currentPeriod);
   if (from) q = q.gte("date", dstr(from));
   const { data, error } = await q.order("date",{ascending:true});
@@ -838,7 +843,7 @@ async function addComment(){
   const body = $("cm-body").value.trim();
   if (!workId){ msg.textContent = "作品を選んでください。"; return; }
   if (!body){ msg.textContent = "コメントを入力してください。"; return; }
-  const { error } = await sb.from("comments").insert({ user_id: currentUser.id, work_id: workId, body });
+  const { error } = await sb.from(T_COMMENTS).insert({ user_id: currentUser.id, work_id: workId, body });
   if (error){ msg.textContent = "保存できませんでした：" + error.message; return; }
   $("cm-body").value = "";
   msg.className="ok"; msg.textContent = "書き残しました。";
@@ -848,7 +853,7 @@ async function renderComments(){
   const workId = $("cm-work").value;
   const box = $("comments-list");
   if (!workId){ box.innerHTML=""; $("comments-empty").classList.remove("hidden"); return; }
-  const { data, error } = await sb.from("comments")
+  const { data, error } = await sb.from(T_COMMENTS)
     .select("*").eq("work_id", workId).order("created_at",{ascending:false});
   if (error){ console.error(error); return; }
   const rows = data || [];
@@ -866,7 +871,7 @@ async function renderComments(){
 }
 async function deleteComment(id){
   if (!confirm("このコメントを削除しますか？")) return;
-  const { error } = await sb.from("comments").delete().eq("id", id);
+  const { error } = await sb.from(T_COMMENTS).delete().eq("id", id);
   if (error){ alert("削除できませんでした：" + error.message); return; }
   renderComments();
 }
