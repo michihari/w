@@ -286,6 +286,10 @@ main{max-width:760px;margin:0 auto;padding:1.4rem 1rem 3rem}
 .work-figs .fig .v small{font-size:.68rem;font-weight:400;color:var(--sumi-soft);margin-left:.12rem}
 .work-figs .fig.today .v{color:var(--midori)}
 
+/* 作品詳細：見出し行 */
+.wm-titlerow{display:flex;align-items:baseline;justify-content:space-between;gap:.7rem}
+.wm-titlerow .t{min-width:0;overflow-wrap:anywhere}
+
 /* 作品詳細：数追加の行 */
 .wm-addrow{display:flex;gap:.5rem}
 .wm-addrow input{
@@ -410,8 +414,8 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
   <nav class="tabbar">
     <button data-page="record" class="active" type="button">記録する</button>
     <button data-page="works" type="button">書斎</button>
-    <button data-page="stats" type="button">統計</button>
     <button data-page="comments" type="button">コメント</button>
+    <button data-page="stats" type="button">統計</button>
     <button data-page="admin" id="tab-admin" class="hidden" type="button">管理</button>
   </nav>
 
@@ -494,6 +498,22 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
       <p id="works-empty" class="muted" style="padding:.5rem .2rem">まだ作品がありません。上からつくってください。</p>
     </section>
 
+    <!-- ===== コメント ===== -->
+    <section id="page-comments" class="hidden">
+      <h1 class="page-title">コメント</h1>
+      <div class="card">
+        <h2>絞り込み</h2>
+        <div class="field" style="margin-bottom:0">
+          <select id="cm-filter"></select>
+        </div>
+      </div>
+      <div class="card">
+        <h2>一覧</h2>
+        <div id="comments-list"></div>
+        <p id="comments-empty" class="muted">まだコメントがありません。書斎の各作品から書き残せます。</p>
+      </div>
+    </section>
+
     <!-- ===== 統計 ===== -->
     <section id="page-stats" class="hidden">
       <h1 class="page-title">統計</h1>
@@ -540,22 +560,6 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
           <tbody id="by-cat-body"></tbody>
         </table>
         <p id="by-cat-empty" class="muted">この期間の記録はありません。</p>
-      </div>
-    </section>
-
-    <!-- ===== コメント ===== -->
-    <section id="page-comments" class="hidden">
-      <h1 class="page-title">コメント</h1>
-      <div class="card">
-        <h2>絞り込み</h2>
-        <div class="field" style="margin-bottom:0">
-          <select id="cm-filter"></select>
-        </div>
-      </div>
-      <div class="card">
-        <h2>一覧</h2>
-        <div id="comments-list"></div>
-        <p id="comments-empty" class="muted">まだコメントがありません。書斎の各作品から書き残せます。</p>
       </div>
     </section>
 
@@ -630,11 +634,18 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
 <div id="work-modal" class="modal-back hidden">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="wm-title">
     <div class="modal-head">
-      <div>
-        <div class="t" id="wm-title"></div>
-        <div class="s" id="wm-sub" style="display:flex;align-items:center;gap:.45rem;flex-wrap:wrap"></div>
+      <div style="min-width:0;flex:1">
+        <div class="wm-titlerow">
+          <div class="t" id="wm-title"></div>
+          <span id="wm-genre"></span>
+        </div>
       </div>
       <button class="modal-close" id="wm-close" type="button">閉じる</button>
+    </div>
+
+    <div class="filter-row" id="wm-status-tabs" style="margin-bottom:1.1rem">
+      <button data-s="執筆中" type="button">執筆中</button>
+      <button data-s="完成" type="button">完成</button>
     </div>
 
     <div class="work-figs" style="border-top:none;padding-top:0;margin-top:0">
@@ -670,7 +681,6 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
 
     <h3>操作</h3>
     <div class="work-actions" style="margin-top:.2rem">
-      <button id="wm-status" class="btn btn-ghost btn-sm" type="button"></button>
       <button id="wm-rename" class="btn btn-ghost btn-sm" type="button">改題</button>
       <button id="wm-delete" class="btn btn-ghost btn-sm" type="button">削除</button>
     </div>
@@ -827,7 +837,9 @@ function bindApp(){
   $("wm-add").onclick = wmAddRecord;
   $("wm-amount").addEventListener("keydown", e => { if(e.key==="Enter") wmAddRecord(); });
   $("wm-comment-save").onclick = wmAddComment;
-  $("wm-status").onclick = wmToggleStatus;
+  document.querySelectorAll("#wm-status-tabs button").forEach(b => {
+    b.onclick = () => wmSetStatus(b.dataset.s);
+  });
   $("wm-rename").onclick = wmRename;
   $("wm-delete").onclick = wmDelete;
 
@@ -1091,13 +1103,6 @@ async function renderWorksList(){
     </button>`;
   }).join("");
 }
-async function toggleStatus(id){
-  const w = works.find(x=>x.id===id); if(!w) return;
-  const next = (w.status||"執筆中") === "完成" ? "執筆中" : "完成";
-  const { error } = await sb.from(T_WORKS).update({ status: next }).eq("id", id);
-  if (error){ alert("変更できませんでした：" + error.message); return; }
-  await loadWorks();
-}
 async function renameWork(id){
   const w = works.find(x=>x.id===id); if(!w) return;
   const name = prompt("新しい作品名", w.name);
@@ -1130,13 +1135,12 @@ async function openWorkModal(workId){
 function renderWorkModalHead(){
   const w = works.find(x=>x.id===detailWorkId); if(!w) return;
   const st = w.status || "執筆中";
-  const done = st === "完成";
   const unit = unitOf(w.category);
   $("wm-title").textContent = w.name;
-  $("wm-sub").innerHTML = `<span class="tag ${w.category==="俳句"?"tag-haiku":""}">${esc(w.category)}</span>
-    <span class="status-chip ${done?"done":""}">${st}</span>`;
+  $("wm-genre").innerHTML = `<span class="tag ${w.category==="俳句"?"tag-haiku":""}">${esc(w.category)}</span>`;
+  document.querySelectorAll("#wm-status-tabs button").forEach(b =>
+    b.classList.toggle("active", b.dataset.s === st));
   $("wm-add-label").textContent = (w.category==="俳句"?"句数":"文字数") + "を追加";
-  $("wm-status").textContent = done ? "執筆中に戻す" : "完成にする";
   $("wm-today").innerHTML = fmt(todayByWork[w.id]||0) + `<small>${unit}</small>`;
 }
 async function renderWorkHistory(){
@@ -1213,8 +1217,12 @@ async function wmAddComment(){
   await renderWorkComments();
   await renderWorksList();
 }
-async function wmToggleStatus(){
-  await toggleStatus(detailWorkId);
+async function wmSetStatus(next){
+  const w = works.find(x=>x.id===detailWorkId); if(!w) return;
+  if ((w.status||"執筆中") === next) return;
+  const { error } = await sb.from(T_WORKS).update({ status: next }).eq("id", detailWorkId);
+  if (error){ alert("変更できませんでした：" + error.message); return; }
+  await loadWorks();
   renderWorkModalHead();
 }
 async function wmRename(){
