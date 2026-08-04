@@ -288,7 +288,11 @@ main{max-width:760px;margin:0 auto;padding:1.4rem 1rem 3rem}
 
 /* 作品詳細：見出し行 */
 .wm-titlerow{display:flex;align-items:baseline;justify-content:space-between;gap:.7rem}
-.wm-titlerow .t{min-width:0;overflow-wrap:anywhere}
+.wm-titlerow .t{min-width:0;overflow-wrap:anywhere;font-size:1.42rem;line-height:1.4}
+
+/* 作品詳細：小さめの状態切り替え */
+#wm-status-tabs{display:inline-flex;gap:.25rem;padding:.2rem;width:auto}
+#wm-status-tabs button{flex:0 0 auto;padding:.3rem .85rem;font-size:.75rem}
 
 /* 作品詳細：数追加の行 */
 .wm-addrow{display:flex;gap:.5rem}
@@ -643,7 +647,7 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
       <button class="modal-close" id="wm-close" type="button">閉じる</button>
     </div>
 
-    <div class="filter-row" id="wm-status-tabs" style="margin-bottom:1.1rem">
+    <div class="filter-row" id="wm-status-tabs" style="margin:-.35rem 0 1.1rem">
       <button data-s="執筆中" type="button">執筆中</button>
       <button data-s="完成" type="button">完成</button>
     </div>
