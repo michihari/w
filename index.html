@@ -793,7 +793,6 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
 
     <div class="chip-row idea-tags" id="wm-new-tags" style="margin-bottom:.55rem">
       <span class="tag-note">タグ：</span>
-      <button data-t="" class="active" type="button">なし</button>
       <button data-t="キャラクター" type="button">キャラクター</button>
       <button data-t="ストーリー" type="button">ストーリー</button>
       <button data-t="ウィット" type="button">ウィット</button>
@@ -1059,8 +1058,9 @@ function bindApp(){
   });
   document.querySelectorAll("#wm-new-tags button").forEach(b => {
     b.onclick = () => {
-      wmNewTag = b.dataset.t;
-      document.querySelectorAll("#wm-new-tags button").forEach(x => x.classList.toggle("active", x===b));
+      wmNewTag = (wmNewTag === b.dataset.t) ? "" : b.dataset.t;
+      document.querySelectorAll("#wm-new-tags button").forEach(x =>
+        x.classList.toggle("active", x.dataset.t === wmNewTag));
     };
   });
   $("wm-mix").onclick = () => openMix(detailWorkId);
@@ -1375,7 +1375,7 @@ async function openWorkModal(workId){
   $("wm-comment-msg").textContent = "";
   wmCmKind = "アイデア"; wmCmTag = "all"; wmNewTag = "";
   document.querySelectorAll("#wm-cm-tags button[data-t]").forEach(x => x.classList.toggle("active", x.dataset.t==="all"));
-  document.querySelectorAll("#wm-new-tags button").forEach(x => x.classList.toggle("active", x.dataset.t===""));
+  document.querySelectorAll("#wm-new-tags button").forEach(x => x.classList.remove("active"));
   syncKindUI();
   renderWorkModalHead();
   openModal("work-modal");
