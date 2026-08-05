@@ -852,16 +852,31 @@ if ("serviceWorker" in navigator && location.protocol === "https:") {
 (function(){
   const isField = el => el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT");
 
-  // タップした入力欄に確実にフォーカスを移す
+  // タップした入力欄に確実にフォーカスを移し、キーボードを開く
+  // （アプリ形式のiOSでは、既定の処理に任せるとキーボードが出ないことが
+  //   あるため、タップの瞬間に自前でフォーカスを与える）
   const forceFocus = e => {
-    const el = e.target.closest ? e.target.closest("input, textarea, select") : null;
-    if (!isField(el) || el.disabled || el.readOnly) return;
-    if (document.activeElement !== el) {
-      try { el.focus({ preventScroll: true }); } catch (_) { el.focus(); }
-    }
+    const t = e.target;
+    const el = t && t.closest ? t.closest("input, textarea") : null;
+    if (!el || el.disabled || el.readOnly) return;
+    if (document.activeElement === el) return;   // 既に開いていれば触らない
+    e.preventDefault();                           // 既定処理との競合を断つ
+    el.focus();
+    try {
+      if (el.setSelectionRange && /^(text|search|email|url|tel|password)$/.test(el.type || "text")) {
+        const len = el.value.length;
+        el.setSelectionRange(len, len);
+      }
+    } catch (_) {}
   };
-  document.addEventListener("pointerup", forceFocus, true);
-  document.addEventListener("touchend", forceFocus, true);
+  document.addEventListener("touchend", forceFocus, { capture:true, passive:false });
+
+  // アプリを切り替えて戻ったあとにキーボードが出なくなる現象への対策
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) return;
+    const a = document.activeElement;
+    if (isField(a)) { a.blur(); setTimeout(() => a.focus(), 80); }
+  });
 
   // ラベルのタップでも入力欄を開く
   document.addEventListener("click", e => {
