@@ -78,7 +78,7 @@ input,select,textarea{font-family:inherit;font-size:1rem;color:var(--sumi)}
   width:100%;padding:.7rem .85rem;border:1.5px solid var(--line);
   border-radius:12px;background:var(--kiri);outline:none;transition:border-color .15s, background .15s;
 }
-.field textarea{resize:vertical;line-height:1.8}
+.field textarea{resize:none;line-height:1.8;min-height:6.2rem;overflow-y:auto;max-height:14rem}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--kaze);background:#fff;box-shadow:0 0 0 3px var(--kaze-mist)}
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:.4rem;
@@ -86,7 +86,7 @@ input,select,textarea{font-family:inherit;font-size:1rem;color:var(--sumi)}
   font-size:.93rem;font-weight:700;letter-spacing:.04em;transition:filter .15s, transform .1s;
 }
 .btn:hover{filter:brightness(1.05)}
-.btn:active{transform:scale(.98)}
+.btn:active{opacity:.85}
 .btn:focus-visible{outline:2px solid var(--kaze);outline-offset:2px}
 .btn-primary{background:var(--kaze);color:#fff}
 .btn-shu{background:var(--sumi);color:#fff}
@@ -107,11 +107,16 @@ input,select,textarea{font-family:inherit;font-size:1rem;color:var(--sumi)}
 #auth-screen{
   min-height:100dvh;display:flex;align-items:center;justify-content:center;
   padding:calc(env(safe-area-inset-top) + 1.5rem) 1.5rem calc(env(safe-area-inset-bottom) + 1.5rem);
-  overflow-y:auto;-webkit-overflow-scrolling:touch;
+  overflow-y:auto;
 }
 .auth-box{width:100%;max-width:400px;margin:auto}
 /* 入力を確実に受け付ける（アプリ形式で開いた場合の対策） */
-input,textarea{-webkit-user-select:text;user-select:text;touch-action:manipulation}
+input,textarea,select{
+  -webkit-user-select:text;user-select:text;
+  -webkit-touch-callout:default;
+  pointer-events:auto;
+  font-size:16px;   /* 16px未満だと拡大や不具合の原因になる */
+}
 .auth-title{
   font-family:var(--maru);text-align:center;margin-bottom:1.8rem;
   font-size:2.4rem;font-weight:700;letter-spacing:.3em;text-indent:.3em;color:var(--sumi);
@@ -186,7 +191,7 @@ main{max-width:760px;margin:0 auto;padding:1.4rem 1rem 3rem}
   padding:.75rem 1.4rem;color:var(--sumi-soft);font-size:.93rem;font-weight:700;
   letter-spacing:.04em;transition:background .15s,border-radius .15s,padding .15s;
 }
-.goal-btn:active{transform:scale(.99)}
+.goal-btn:active{opacity:.9}
 .goal-btn:focus-visible{outline:2px solid var(--kaze);outline-offset:2px}
 .goal-btn.set{
   background:var(--shiro);border-color:transparent;box-shadow:var(--shadow);
@@ -262,7 +267,7 @@ main{max-width:760px;margin:0 auto;padding:1.4rem 1rem 3rem}
   border-left:4px solid var(--kaze);cursor:pointer;
   transition:transform .1s;
 }
-.work-card:active{transform:scale(.99)}
+.work-card:active{opacity:.85}
 .work-card:focus-visible{outline:2px solid var(--kaze);outline-offset:2px}
 .work-card.done{border-left-color:var(--michi)}
 .work-top{display:flex;align-items:center;justify-content:space-between;gap:.7rem}
@@ -316,6 +321,81 @@ main{max-width:760px;margin:0 auto;padding:1.4rem 1rem 3rem}
 .comment-item .wname{font-family:var(--maru);font-weight:700;font-size:.9rem}
 .comment-item .when{font-size:.72rem;color:var(--sumi-soft)}
 .comment-item .body{font-size:.92rem;line-height:1.9;white-space:pre-wrap}
+.comment-item .cm-btns{display:flex;gap:.3rem;flex-shrink:0}
+.cm-edit{margin-top:.4rem}
+.cm-edit-area{
+  width:100%;padding:.7rem .85rem;border:1.5px solid var(--kaze);border-radius:12px;
+  background:#fff;outline:none;line-height:1.8;resize:none;min-height:5.5rem;max-height:14rem;
+  box-shadow:0 0 0 3px var(--kaze-mist);
+}
+.cm-edit-btns{display:flex;gap:.4rem;margin-top:.5rem}
+
+/* コメント：種別・タグ */
+.kind-tabs{display:inline-flex;gap:.25rem;padding:.2rem;width:auto;margin-bottom:.55rem}
+.kind-tabs button{flex:0 0 auto;padding:.32rem .95rem;font-size:.78rem}
+.idea-tags{align-items:center}
+.idea-tags button{padding:.32rem .75rem;font-size:.76rem}
+.idea-tags .tag-note{font-size:.74rem;color:var(--sumi-soft)}
+.mix-btn{
+  margin-left:auto;
+  background:linear-gradient(120deg,var(--kaze),#7BAFA8)!important;
+  border-color:transparent!important;color:#fff!important;font-weight:700;
+}
+
+/* To Do */
+.todo-item{display:flex;align-items:flex-start;gap:.65rem;padding:.7rem 0;border-bottom:1px solid var(--line)}
+.todo-item:last-child{border-bottom:none}
+.todo-check{
+  flex-shrink:0;width:1.7rem;height:1.7rem;border-radius:999px;margin-top:.1rem;
+  border:2px solid var(--kaze);background:#fff;color:transparent;
+  display:flex;align-items:center;justify-content:center;font-size:.95rem;font-weight:700;
+  transition:background .18s,color .18s,transform .18s;
+}
+.todo-check:active{transform:scale(.9)}
+.todo-item.done .todo-check{background:var(--midori);border-color:var(--midori);color:#fff;animation:pop .35s ease}
+@keyframes pop{0%{transform:scale(.6)}55%{transform:scale(1.22)}100%{transform:scale(1)}}
+.todo-body{flex:1;min-width:0}
+.todo-text{font-size:.92rem;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere;transition:color .2s}
+.todo-item.done .todo-text{color:var(--sumi-soft);text-decoration:line-through;text-decoration-color:var(--midori);text-decoration-thickness:2px}
+.todo-when{font-size:.7rem;color:var(--sumi-soft);margin-top:.2rem}
+.todo-item .cm-btns{flex-shrink:0;display:flex;gap:.25rem}
+
+/* 完了の紙吹雪 */
+.confetti{position:fixed;z-index:120;width:.5rem;height:.5rem;border-radius:2px;pointer-events:none}
+
+/* ミックス */
+#mix-screen{
+  position:fixed;inset:0;z-index:100;overflow:hidden;
+  background:
+    radial-gradient(120% 90% at 50% 108%, rgba(184,169,144,.28), transparent 55%),
+    linear-gradient(#DCE9E7 0%, #EDF3F1 45%, #F5F3EC 100%);
+}
+#mix-canvas{position:absolute;inset:0;width:100%;height:100%}
+#mix-nodes{position:absolute;inset:0}
+.mix-node{
+  position:absolute;left:0;top:0;transform:translate(-50%,-50%);
+  border-radius:999px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--maru);font-weight:700;color:var(--sumi);
+  background:rgba(255,255,255,.88);box-shadow:0 4px 16px rgba(58,66,63,.12);
+  border:2px solid transparent;cursor:pointer;user-select:none;-webkit-user-select:none;
+  white-space:nowrap;padding:0 .8rem;transition:opacity .25s,border-color .25s;
+}
+.mix-node.dim{opacity:.22}
+.mix-node.lit{border-color:var(--kaze);box-shadow:0 6px 20px rgba(78,139,132,.35)}
+#mix-close{
+  position:absolute;top:calc(env(safe-area-inset-top) + .9rem);right:.9rem;z-index:110;
+  background:rgba(255,255,255,.9);border:none;border-radius:999px;
+  padding:.5rem 1.05rem;font-size:.85rem;font-weight:700;color:var(--sumi);
+  box-shadow:var(--shadow);
+}
+#mix-hint{
+  position:absolute;top:calc(env(safe-area-inset-top) + 1.15rem);left:1rem;z-index:105;
+  font-size:.72rem;color:var(--sumi-soft);max-width:60%;
+}
+#mix-empty{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  text-align:center;color:var(--sumi-soft);font-size:.95rem;line-height:2;
+}
 
 /* 管理 */
 .acc-item{padding:.9rem .2rem;border-bottom:1px solid var(--line)}
@@ -329,9 +409,15 @@ main{max-width:760px;margin:0 auto;padding:1.4rem 1rem 3rem}
 .badge-self{background:var(--kaze-mist);color:var(--kaze-deep);font-size:.65rem;padding:.12rem .5rem;border-radius:99px}
 
 /* モーダル */
-.modal-back{position:fixed;inset:0;z-index:60;background:rgba(58,66,63,.35);backdrop-filter:blur(2px);display:flex;align-items:flex-end;justify-content:center}
+.modal-back{
+  position:fixed;top:0;left:0;right:0;height:var(--vvh, 100dvh);
+  z-index:60;background:rgba(58,66,63,.35);backdrop-filter:blur(2px);
+  display:flex;align-items:flex-end;justify-content:center;
+}
 .modal{
-  background:var(--kiri);width:100%;max-width:560px;max-height:88dvh;overflow-y:auto;
+  background:var(--kiri);width:100%;max-width:560px;overflow-y:auto;
+  max-height:var(--vvh, 100dvh);
+  overscroll-behavior:contain;
   border-radius:22px 22px 0 0;padding:1.3rem 1.3rem calc(1.3rem + env(safe-area-inset-bottom));
 }
 .modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:.6rem;margin-bottom:1rem}
@@ -511,8 +597,20 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
       <h1 class="page-title">コメント</h1>
       <div class="card">
         <h2>絞り込み</h2>
-        <div class="field" style="margin-bottom:0">
+        <div class="field">
           <select id="cm-filter"></select>
+        </div>
+        <div class="filter-row kind-tabs" id="cm-kind">
+          <button data-k="アイデア" class="active" type="button">アイデア</button>
+          <button data-k="ToDo" type="button">To Do</button>
+        </div>
+        <div class="chip-row idea-tags" id="cm-tags" style="margin-top:.6rem">
+          <button data-t="all" class="active" type="button">すべて</button>
+          <button data-t="キャラクター" type="button">キャラクター</button>
+          <button data-t="ストーリー" type="button">ストーリー</button>
+          <button data-t="ウィット" type="button">ウィット</button>
+          <button data-t="コンセプト" type="button">コンセプト</button>
+          <button class="mix-btn" id="cm-mix" type="button">ミックス</button>
         </div>
       </div>
       <div class="card">
@@ -605,6 +703,15 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
   </main>
 </div>
 
+<!-- ============ ミックス（アイデアの言葉を空に浮かべる） ============ -->
+<div id="mix-screen" class="hidden">
+  <button id="mix-close" type="button">閉じる</button>
+  <div id="mix-hint">風船をタップすると、つながりが浮かび上がります</div>
+  <canvas id="mix-canvas"></canvas>
+  <div id="mix-nodes"></div>
+  <div id="mix-empty" class="hidden">言葉が見つかりません。<br>アイデアをいくつか書き残してから、もう一度どうぞ。</div>
+</div>
+
 <!-- ============ 目標設定モーダル ============ -->
 <div id="goal-modal" class="modal-back hidden">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="goal-modal-title">
@@ -679,10 +786,30 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
     <p id="wm-history-empty" class="muted">まだ記録がありません。</p>
 
     <h3>コメント</h3>
-    <div class="field" style="margin-bottom:.5rem">
-      <textarea id="wm-comment" rows="3"></textarea>
+    <div class="filter-row kind-tabs" id="wm-cm-kind">
+      <button data-k="アイデア" class="active" type="button">アイデア</button>
+      <button data-k="ToDo" type="button">To Do</button>
     </div>
-    <button id="wm-comment-save" class="btn btn-ghost btn-block" type="button">書き残す</button>
+    <div class="chip-row idea-tags" id="wm-cm-tags">
+      <button data-t="all" class="active" type="button">すべて</button>
+      <button data-t="キャラクター" type="button">キャラクター</button>
+      <button data-t="ストーリー" type="button">ストーリー</button>
+      <button data-t="ウィット" type="button">ウィット</button>
+      <button data-t="コンセプト" type="button">コンセプト</button>
+      <button class="mix-btn" id="wm-mix" type="button">ミックス</button>
+    </div>
+    <div class="field" style="margin:.7rem 0 .55rem">
+      <textarea id="wm-comment" rows="4" enterkeyhint="enter"></textarea>
+    </div>
+    <div class="chip-row idea-tags" id="wm-new-tags">
+      <span class="tag-note">タグ：</span>
+      <button data-t="" class="active" type="button">なし</button>
+      <button data-t="キャラクター" type="button">キャラクター</button>
+      <button data-t="ストーリー" type="button">ストーリー</button>
+      <button data-t="ウィット" type="button">ウィット</button>
+      <button data-t="コンセプト" type="button">コンセプト</button>
+    </div>
+    <button id="wm-comment-save" class="btn btn-ghost btn-block" type="button" style="margin-top:.6rem">書き残す</button>
     <p id="wm-comment-msg" class="err" style="margin-top:.3rem"></p>
     <div id="wm-comments"></div>
     <p id="wm-comments-empty" class="muted">まだコメントがありません。</p>
@@ -719,6 +846,74 @@ if ("serviceWorker" in navigator && location.protocol === "https:") {
   });
 }
 
+/* ---- 入力欄の共通対策（アプリ形式でキーボードが出ない場合の保険） ---- */
+(function(){
+  const isField = el => el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT");
+
+  // タップした入力欄に確実にフォーカスを移す
+  const forceFocus = e => {
+    const el = e.target.closest ? e.target.closest("input, textarea, select") : null;
+    if (!isField(el) || el.disabled || el.readOnly) return;
+    if (document.activeElement !== el) {
+      try { el.focus({ preventScroll: true }); } catch (_) { el.focus(); }
+    }
+  };
+  document.addEventListener("pointerup", forceFocus, true);
+  document.addEventListener("touchend", forceFocus, true);
+
+  // ラベルのタップでも入力欄を開く
+  document.addEventListener("click", e => {
+    const label = e.target.closest && e.target.closest("label[for]");
+    if (!label) return;
+    const el = document.getElementById(label.getAttribute("for"));
+    if (isField(el)) el.focus();
+  }, true);
+
+  // キーボードで隠れないよう、入力欄を画面内へ寄せる
+  document.addEventListener("focusin", e => {
+    const el = e.target;
+    if (!isField(el)) return;
+    const bring = () => {
+      try {
+        const modal = el.closest(".modal");
+        el.scrollIntoView({ block: modal ? "center" : "center", behavior: "smooth" });
+      } catch (_) {}
+    };
+    setTimeout(bring, 250);
+    setTimeout(bring, 550);   // キーボードが出きってからもう一度
+  });
+
+  // キーボードで隠れる分を差し引いた「実際に見えている高さ」を反映する
+  const vv = window.visualViewport;
+  const applyViewport = () => {
+    const h = vv ? vv.height : window.innerHeight;
+    document.documentElement.style.setProperty("--vvh", h + "px");
+  };
+  applyViewport();
+  if (vv){
+    vv.addEventListener("resize", applyViewport);
+    vv.addEventListener("scroll", applyViewport);
+  }
+  window.addEventListener("orientationchange", () => setTimeout(applyViewport, 300));
+
+  // 入力に応じて高さが伸びるテキストエリア
+  const grow = el => {
+    if (el.tagName !== "TEXTAREA") return;
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 14 * 16) + "px";
+  };
+  document.addEventListener("input", e => grow(e.target));
+
+  // モーダルの開閉で body のスクロール禁止が残らないようにする
+  const unstick = () => {
+    if (document.querySelectorAll(".modal-back:not(.hidden)").length === 0) {
+      document.body.style.overflow = "";
+    }
+  };
+  window.addEventListener("pageshow", unstick);
+  window.addEventListener("focus", unstick);
+})();
+
 /* ---- ユーティリティ ---- */
 const $ = id => document.getElementById(id);
 const fmt = n => Number(n||0).toLocaleString("ja-JP");
@@ -734,6 +929,9 @@ let works = [], chart = null, currentPeriod = "week";
 let commentCounts = {}, todayByWork = {};
 let workFilterStatus = "執筆中", workFilterCat = "all", workNewCat = "小説";
 let detailWorkId = null;
+let wmCmKind = "アイデア", wmCmTag = "all", wmNewTag = "";
+let cmKind = "アイデア", cmTag = "all";
+const IDEA_TAGS = ["キャラクター","ストーリー","ウィット","コンセプト"];
 let todayGoal = null, todayChars = 0, todayHaiku = 0;
 
 
@@ -757,12 +955,6 @@ function bindAuth(){
   $("auth-submit").onclick = doAuth;
   $("auth-pass").addEventListener("keydown", e => { if(e.key==="Enter") doAuth(); });
   $("auth-email").addEventListener("keydown", e => { if(e.key==="Enter") $("auth-pass").focus(); });
-  // アプリ形式（ホーム画面から起動）でキーボードが入力欄を覆わないようにする
-  ["auth-email","auth-pass"].forEach(id => {
-    $(id).addEventListener("focus", () => {
-      setTimeout(() => $(id).scrollIntoView({ block:"center", behavior:"smooth" }), 300);
-    });
-  });
 }
 function setAuthMode(m){
   authMode = m;
@@ -852,6 +1044,41 @@ function bindApp(){
   $("wm-add").onclick = wmAddRecord;
   $("wm-amount").addEventListener("keydown", e => { if(e.key==="Enter") wmAddRecord(); });
   $("wm-comment-save").onclick = wmAddComment;
+  document.querySelectorAll("#wm-cm-kind button").forEach(b => {
+    b.onclick = () => { wmCmKind = b.dataset.k; syncKindUI(); renderWorkComments(); };
+  });
+  document.querySelectorAll("#wm-cm-tags button[data-t]").forEach(b => {
+    b.onclick = () => {
+      wmCmTag = b.dataset.t;
+      document.querySelectorAll("#wm-cm-tags button[data-t]").forEach(x => x.classList.toggle("active", x===b));
+      renderWorkComments();
+    };
+  });
+  document.querySelectorAll("#wm-new-tags button").forEach(b => {
+    b.onclick = () => {
+      wmNewTag = b.dataset.t;
+      document.querySelectorAll("#wm-new-tags button").forEach(x => x.classList.toggle("active", x===b));
+    };
+  });
+  $("wm-mix").onclick = () => openMix(detailWorkId);
+
+  document.querySelectorAll("#cm-kind button").forEach(b => {
+    b.onclick = () => {
+      cmKind = b.dataset.k;
+      document.querySelectorAll("#cm-kind button").forEach(x => x.classList.toggle("active", x===b));
+      $("cm-tags").classList.toggle("hidden", cmKind !== "アイデア");
+      renderComments();
+    };
+  });
+  document.querySelectorAll("#cm-tags button[data-t]").forEach(b => {
+    b.onclick = () => {
+      cmTag = b.dataset.t;
+      document.querySelectorAll("#cm-tags button[data-t]").forEach(x => x.classList.toggle("active", x===b));
+      renderComments();
+    };
+  });
+  $("cm-mix").onclick = () => openMix($("cm-filter").value || null);
+  $("mix-close").onclick = closeMix;
   document.querySelectorAll("#wm-status-tabs button").forEach(b => {
     b.onclick = () => wmSetStatus(b.dataset.s);
   });
@@ -1143,9 +1370,21 @@ async function openWorkModal(workId){
   $("wm-comment").value = "";
   $("wm-add-msg").textContent = "";
   $("wm-comment-msg").textContent = "";
+  wmCmKind = "アイデア"; wmCmTag = "all"; wmNewTag = "";
+  document.querySelectorAll("#wm-cm-tags button[data-t]").forEach(x => x.classList.toggle("active", x.dataset.t==="all"));
+  document.querySelectorAll("#wm-new-tags button").forEach(x => x.classList.toggle("active", x.dataset.t===""));
+  syncKindUI();
   renderWorkModalHead();
   openModal("work-modal");
   await Promise.all([renderWorkHistory(), renderWorkComments()]);
+}
+function syncKindUI(){
+  document.querySelectorAll("#wm-cm-kind button").forEach(b =>
+    b.classList.toggle("active", b.dataset.k === wmCmKind));
+  const idea = wmCmKind === "アイデア";
+  $("wm-cm-tags").classList.toggle("hidden", !idea);
+  $("wm-new-tags").classList.toggle("hidden", !idea);
+  $("wm-comment-save").textContent = idea ? "書き残す" : "To Doに加える";
 }
 function renderWorkModalHead(){
   const w = works.find(x=>x.id===detailWorkId); if(!w) return;
@@ -1207,30 +1446,85 @@ async function wmDeleteRecord(id){
   await renderWorksList();
 }
 async function renderWorkComments(){
-  const { data, error } = await sb.from(T_COMMENTS).select("*")
-    .eq("work_id", detailWorkId).order("created_at",{ascending:false});
+  let q = sb.from(T_COMMENTS).select("*").eq("work_id", detailWorkId).eq("kind", wmCmKind);
+  if (wmCmKind === "アイデア" && wmCmTag !== "all") q = q.eq("idea_tag", wmCmTag);
+  const { data, error } = await q.order("created_at",{ascending:false});
   if (error){ console.error(error); return; }
-  const rows = data || [];
+  let rows = data || [];
+  if (wmCmKind === "ToDo") rows.sort((a,b) => (a.done===b.done) ? 0 : (a.done ? 1 : -1));
   $("wm-comments-empty").classList.toggle("hidden", rows.length>0);
-  $("wm-comments").innerHTML = rows.map(c => `
-    <div class="comment-item">
-      <div class="head">
-        <span class="when">${whenStr(c.created_at)}</span>
-        <button class="btn btn-ghost btn-sm" onclick="deleteComment('${c.id}', true)">削除</button>
+  $("wm-comments-empty").textContent = wmCmKind==="ToDo" ? "To Doはまだありません。" : "まだアイデアがありません。";
+  $("wm-comments").innerHTML = rows.map(c => commentItemHTML(c, true)).join("");
+}
+function commentItemHTML(c, inModal, workLabel){
+  const edited = c.updated_at && c.updated_at !== c.created_at ? "（編集済）" : "";
+  const head = workLabel || "";
+  if (c.kind === "ToDo"){
+    return `<div class="todo-item ${c.done?"done":""}" id="cm-${c.id}">
+      <button class="todo-check" type="button" onclick="toggleTodo('${c.id}', ${inModal}, event)">✓</button>
+      <div class="todo-body">
+        <div class="todo-text body">${esc(c.body)}</div>
+        <div class="todo-when">${head}${whenStr(c.created_at)}${edited}</div>
       </div>
-      <div class="body">${esc(c.body)}</div>
-    </div>`).join("");
+      <span class="cm-btns">
+        <button class="btn btn-ghost btn-sm" onclick="startEditComment('${c.id}', ${inModal})">編集</button>
+        <button class="btn btn-ghost btn-sm" onclick="deleteComment('${c.id}', ${inModal})">削除</button>
+      </span>
+    </div>`;
+  }
+  return `<div class="comment-item" id="cm-${c.id}">
+    <div class="head">
+      <span class="src">
+        ${head}
+        ${c.idea_tag ? `<span class="tag">${esc(c.idea_tag)}</span>` : ""}
+        <span class="when">${whenStr(c.created_at)}${edited}</span>
+      </span>
+      <span class="cm-btns">
+        <button class="btn btn-ghost btn-sm" onclick="startEditComment('${c.id}', ${inModal})">編集</button>
+        <button class="btn btn-ghost btn-sm" onclick="deleteComment('${c.id}', ${inModal})">削除</button>
+      </span>
+    </div>
+    <div class="body">${esc(c.body)}</div>
+  </div>`;
 }
 async function wmAddComment(){
   const msg = $("wm-comment-msg"); msg.className="err"; msg.textContent = "";
   const body = $("wm-comment").value.trim();
-  if (!body){ msg.textContent = "コメントを入力してください。"; return; }
-  const { error } = await sb.from(T_COMMENTS).insert({ user_id: currentUser.id, work_id: detailWorkId, body });
+  if (!body){ msg.textContent = wmCmKind==="ToDo" ? "To Doを入力してください。" : "アイデアを入力してください。"; return; }
+  const row = { user_id: currentUser.id, work_id: detailWorkId, body, kind: wmCmKind };
+  if (wmCmKind === "アイデア" && wmNewTag) row.idea_tag = wmNewTag;
+  const { error } = await sb.from(T_COMMENTS).insert(row);
   if (error){ msg.textContent = translateWriteError(error.message); return; }
   $("wm-comment").value = "";
   msg.className="ok"; msg.textContent = "書き残しました。";
   await renderWorkComments();
   await renderWorksList();
+}
+async function toggleTodo(id, inModal, ev){
+  const item = document.getElementById("cm-" + id);
+  const nowDone = item && !item.classList.contains("done");
+  const { error } = await sb.from(T_COMMENTS).update({ done: nowDone }).eq("id", id);
+  if (error){ alert("変更できませんでした：" + error.message); return; }
+  if (nowDone && ev) celebrate(ev.clientX, ev.clientY);
+  if (inModal) await renderWorkComments(); else await renderComments();
+}
+function celebrate(x, y){
+  const colors = ["#4E9C72","#4E8B84","#B8A990","#E9C46A","#D95F55","#2B4570"];
+  for (let i=0;i<16;i++){
+    const el = document.createElement("span");
+    el.className = "confetti";
+    el.style.background = colors[i % colors.length];
+    el.style.left = x + "px"; el.style.top = y + "px";
+    document.body.appendChild(el);
+    const ang = Math.random()*Math.PI*2, dist = 46 + Math.random()*66;
+    const dx = Math.cos(ang)*dist, dy = Math.sin(ang)*dist - 34;
+    const rot = (Math.random()*540 - 270);
+    el.animate([
+      { transform:"translate(-50%,-50%)", opacity:1 },
+      { transform:`translate(calc(-50% + ${dx}px), calc(-50% + ${dy + 46}px)) rotate(${rot}deg)`, opacity:0 }
+    ], { duration: 650 + Math.random()*350, easing:"cubic-bezier(.16,.8,.4,1)" })
+      .onfinish = () => el.remove();
+  }
 }
 async function wmSetStatus(next){
   const w = works.find(x=>x.id===detailWorkId); if(!w) return;
@@ -1253,6 +1547,47 @@ async function wmDelete(){
 /* =====================================================================
    コメント
    ===================================================================== */
+function startEditComment(id, inModal){
+  const box = document.getElementById("cm-" + id);
+  if (!box || box.querySelector(".cm-edit")) return;
+  const bodyEl = box.querySelector(".body");
+  const current = bodyEl.textContent;
+  bodyEl.classList.add("hidden");
+  box.querySelector(".cm-btns").classList.add("hidden");
+  const wrap = document.createElement("div");
+  wrap.className = "cm-edit";
+  wrap.innerHTML = `
+    <textarea class="cm-edit-area" rows="4"></textarea>
+    <p class="err cm-edit-msg" style="margin-top:.25rem"></p>
+    <div class="cm-edit-btns">
+      <button class="btn btn-primary btn-sm" type="button">保存</button>
+      <button class="btn btn-ghost btn-sm" type="button">やめる</button>
+    </div>`;
+  const ta = wrap.querySelector("textarea");
+  ta.value = current;
+  const [saveBtn, cancelBtn] = wrap.querySelectorAll("button");
+  saveBtn.onclick = () => saveEditComment(id, inModal, ta, wrap.querySelector(".cm-edit-msg"));
+  cancelBtn.onclick = () => {
+    wrap.remove();
+    bodyEl.classList.remove("hidden");
+    box.querySelector(".cm-btns").classList.remove("hidden");
+  };
+  box.appendChild(wrap);
+  ta.focus();
+  ta.setSelectionRange(ta.value.length, ta.value.length);
+  ta.style.height = "auto";
+  ta.style.height = Math.min(ta.scrollHeight, 14*16) + "px";
+}
+async function saveEditComment(id, inModal, ta, msgEl){
+  const body = ta.value.trim();
+  msgEl.className = "err cm-edit-msg";
+  if (!body){ msgEl.textContent = "コメントを入力してください。"; return; }
+  const { error } = await sb.from(T_COMMENTS)
+    .update({ body, updated_at: new Date().toISOString() }).eq("id", id);
+  if (error){ msgEl.textContent = translateWriteError(error.message); return; }
+  if (inModal) await renderWorkComments();
+  else await renderComments();
+}
 async function deleteComment(id, inModal){
   if (!confirm("このコメントを削除しますか？")) return;
   const { error } = await sb.from(T_COMMENTS).delete().eq("id", id);
@@ -1262,28 +1597,202 @@ async function deleteComment(id, inModal){
 }
 async function renderComments(){
   const filter = $("cm-filter").value;
-  let q = sb.from(T_COMMENTS).select(`id, body, created_at, work_id, works:${T_WORKS}(name, category)`)
-    .eq("user_id", currentUser.id);
+  let q = sb.from(T_COMMENTS).select(`id, body, kind, idea_tag, done, created_at, updated_at, work_id, works:${T_WORKS}(name, category)`)
+    .eq("user_id", currentUser.id).eq("kind", cmKind);
   if (filter) q = q.eq("work_id", filter);
+  if (cmKind === "アイデア" && cmTag !== "all") q = q.eq("idea_tag", cmTag);
   const { data, error } = await q.order("created_at",{ascending:false});
   if (error){ console.error(error); return; }
-  const rows = data || [];
+  let rows = data || [];
+  if (cmKind === "ToDo") rows.sort((a,b) => (a.done===b.done) ? 0 : (a.done ? 1 : -1));
   $("comments-empty").classList.toggle("hidden", rows.length>0);
+  $("comments-empty").textContent = cmKind==="ToDo"
+    ? "To Doはまだありません。書斎の各作品から加えられます。"
+    : "まだアイデアがありません。書斎の各作品から書き残せます。";
   $("comments-list").innerHTML = rows.map(c => {
     const nm = c.works ? c.works.name : "（削除済の作品）";
-    const cat = c.works ? c.works.category : "";
-    return `<div class="comment-item">
-      <div class="head">
-        <span class="src">
-          <span class="wname">${esc(nm)}</span>
-          ${cat ? `<span class="tag ${cat==="俳句"?"tag-haiku":""}">${esc(cat)}</span>` : ""}
-          <span class="when">${whenStr(c.created_at)}</span>
-        </span>
-        <button class="btn btn-ghost btn-sm" onclick="deleteComment('${c.id}', false)">削除</button>
-      </div>
-      <div class="body">${esc(c.body)}</div>
-    </div>`;
+    const label = `<span class="wname">${esc(nm)}</span>`;
+    return commentItemHTML(c, false, label);
   }).join("");
+}
+
+/* =====================================================================
+   ミックス — アイデアの言葉を空に浮かべ、共通する言葉をつなぐ
+   ===================================================================== */
+let mixAnim = null, mixNodes = [], mixLinks = [], mixSelected = null;
+
+const MIX_STOP = new Set(["する","いる","なる","ある","こと","もの","それ","これ","あれ","ため","よう","そう","ような","ように","という","といった","して","した","します","です","ます","ました","ない","たい","れる","られる","せる","させる","ください","ほか","など","まで","から","ので","けど","でも","また","その","この","あの","どの","とき","ところ","ひと","わたし","自分","感じ","思う","思った","考え","今日","本日","明日"]);
+
+function mixTokenize(text){
+  let words = [];
+  try{
+    const seg = new Intl.Segmenter("ja", { granularity:"word" });
+    for (const t of seg.segment(text)) if (t.isWordLike) words.push(t.segment);
+  }catch(_){
+    words = text.split(/[\s、。・，．,.!?！？\n「」『』()（）【】…ー〜~:：;；]+/);
+  }
+  return words.map(w => w.trim())
+    .filter(w => w.length >= 2)
+    .filter(w => !MIX_STOP.has(w))
+    .filter(w => !/^[0-9０-９]+$/.test(w))
+    .filter(w => !/^[ぁ-ん]{1,2}$/.test(w))
+    .filter(w => !/^[a-zA-Z]$/.test(w));
+}
+
+async function openMix(workId){
+  let q = sb.from(T_COMMENTS).select("body").eq("user_id", currentUser.id).eq("kind","アイデア");
+  if (workId) q = q.eq("work_id", workId);
+  const { data, error } = await q.limit(300);
+  if (error){ alert("読み込めませんでした：" + error.message); return; }
+
+  // 言葉の集計と、同じアイデアに現れた言葉どうしのつながり
+  const freq = {}, pair = {};
+  (data||[]).forEach(c => {
+    const uniq = [...new Set(mixTokenize(c.body))].slice(0, 8);
+    uniq.forEach(w => freq[w] = (freq[w]||0) + 1);
+    for (let i=0;i<uniq.length;i++) for (let j=i+1;j<uniq.length;j++){
+      const k = [uniq[i], uniq[j]].sort().join("｜");
+      pair[k] = (pair[k]||0) + 1;
+    }
+  });
+  const top = Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0, 36);
+  const wordsSet = new Set(top.map(t=>t[0]));
+
+  $("mix-screen").classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+  $("mix-empty").classList.toggle("hidden", top.length > 0);
+  const nodesBox = $("mix-nodes");
+  nodesBox.innerHTML = "";
+  mixSelected = null;
+
+  const W = window.innerWidth, H = window.innerHeight;
+  const palette = [
+    ["rgba(78,139,132,.18)","#3E736D"],
+    ["rgba(184,169,144,.24)","#7d6f57"],
+    ["rgba(43,69,112,.14)","#2B4570"],
+    ["rgba(233,196,106,.28)","#8a6d1d"]
+  ];
+  mixNodes = top.map(([word,count],i) => {
+    const r = Math.min(16 + count*7 + word.length*2.4, 64);
+    const el = document.createElement("button");
+    el.type = "button";
+    el.className = "mix-node";
+    el.textContent = word;
+    const [bg,fg] = palette[i % palette.length];
+    el.style.background = `linear-gradient(${bg},${bg}), rgba(255,255,255,.9)`;
+    el.style.color = fg;
+    el.style.height = (r*1.5) + "px";
+    el.style.fontSize = Math.min(.78 + count*.07, 1.15) + "rem";
+    nodesBox.appendChild(el);
+    const n = {
+      word, count, el, r,
+      x: W*0.2 + Math.random()*W*0.6,
+      y: H*0.25 + Math.random()*H*0.5,
+      vx: 0, vy: 0,
+      phase: Math.random()*Math.PI*2,
+      bob: 4 + Math.random()*5
+    };
+    el.onclick = () => mixSelect(n);
+    return n;
+  });
+  const idx = {}; mixNodes.forEach((n,i)=>idx[n.word]=i);
+  mixLinks = Object.entries(pair)
+    .map(([k,w]) => { const [a,b]=k.split("｜"); return {a:idx[a], b:idx[b], w}; })
+    .filter(l => l.a!=null && l.b!=null && wordsSet.has(mixNodes[l.a].word) && wordsSet.has(mixNodes[l.b].word));
+
+  mixNodes.forEach(n => { n.deg = 0; });
+  mixLinks.forEach(l => { mixNodes[l.a].deg++; mixNodes[l.b].deg++; });
+
+  const canvas = $("mix-canvas");
+  canvas.width = W * devicePixelRatio; canvas.height = H * devicePixelRatio;
+  const ctx = canvas.getContext("2d");
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+
+  let t = 0;
+  const step = () => {
+    t += 0.016;
+    // ちからの計算：反発・つながりの引力・中央へのゆるい引力
+    for (let i=0;i<mixNodes.length;i++){
+      const a = mixNodes[i];
+      a.vx += (W/2 - a.x) * 0.0004;
+      a.vy += (H/2 - a.y) * 0.0004;
+      for (let j=i+1;j<mixNodes.length;j++){
+        const b = mixNodes[j];
+        let dx = a.x-b.x, dy = a.y-b.y;
+        let d2 = dx*dx + dy*dy; if (d2 < 1) d2 = 1;
+        const d = Math.sqrt(d2);
+        const min = (a.r + b.r) * 1.15 + 26;
+        const f = d < min ? (min-d)*0.02 : 900/d2;
+        a.vx += dx/d*f; a.vy += dy/d*f;
+        b.vx -= dx/d*f; b.vy -= dy/d*f;
+      }
+    }
+    mixLinks.forEach(l => {
+      const a = mixNodes[l.a], b = mixNodes[l.b];
+      const dx = b.x-a.x, dy = b.y-a.y;
+      const d = Math.sqrt(dx*dx+dy*dy) || 1;
+      const want = 130 + 40/(l.w);
+      const f = (d - want) * 0.0022 * Math.min(l.w, 3);
+      a.vx += dx/d*f; a.vy += dy/d*f;
+      b.vx -= dx/d*f; b.vy -= dy/d*f;
+    });
+    mixNodes.forEach(n => {
+      n.vx *= 0.86; n.vy *= 0.86;
+      n.x = Math.max(n.r+8, Math.min(W-n.r-8, n.x + n.vx));
+      n.y = Math.max(n.r+70, Math.min(H-n.r-24, n.y + n.vy));
+    });
+
+    // 線を描く（ゆるやかな曲線）
+    ctx.clearRect(0,0,W,H);
+    mixLinks.forEach(l => {
+      const a = mixNodes[l.a], b = mixNodes[l.b];
+      const lit = mixSelected && (a===mixSelected || b===mixSelected);
+      const dim = mixSelected && !lit;
+      ctx.strokeStyle = lit ? "rgba(78,139,132,.75)" : (dim ? "rgba(78,139,132,.06)" : "rgba(78,139,132,.28)");
+      ctx.lineWidth = Math.min(1 + l.w, 4) + (lit ? 1 : 0);
+      const ax = a.x, ay = a.y + Math.sin(t + a.phase)*a.bob;
+      const bx = b.x, by = b.y + Math.sin(t + b.phase)*b.bob;
+      const mx = (ax+bx)/2 + Math.sin(t*0.6 + a.phase)*12;
+      const my = (ay+by)/2 + Math.cos(t*0.5 + b.phase)*12;
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.quadraticCurveTo(mx, my, bx, by);
+      ctx.stroke();
+    });
+
+    // 風船の位置（ふわふわ漂う）
+    mixNodes.forEach(n => {
+      const y = n.y + Math.sin(t + n.phase)*n.bob;
+      n.el.style.transform = `translate(${n.x}px, ${y}px) translate(-50%,-50%)`;
+    });
+
+    mixAnim = requestAnimationFrame(step);
+  };
+  cancelAnimationFrame(mixAnim);
+  step();
+}
+function mixSelect(n){
+  if (mixSelected === n){ mixSelected = null; }
+  else mixSelected = n;
+  const near = new Set();
+  if (mixSelected){
+    near.add(mixSelected);
+    mixLinks.forEach(l => {
+      if (mixNodes[l.a] === mixSelected) near.add(mixNodes[l.b]);
+      if (mixNodes[l.b] === mixSelected) near.add(mixNodes[l.a]);
+    });
+  }
+  mixNodes.forEach(x => {
+    x.el.classList.toggle("lit", mixSelected ? near.has(x) : false);
+    x.el.classList.toggle("dim", mixSelected ? !near.has(x) : false);
+  });
+}
+function closeMix(){
+  cancelAnimationFrame(mixAnim);
+  $("mix-screen").classList.add("hidden");
+  $("mix-nodes").innerHTML = "";
+  mixNodes = []; mixLinks = []; mixSelected = null;
+  if (document.querySelectorAll(".modal-back:not(.hidden)").length === 0) document.body.style.overflow = "";
 }
 
 /* =====================================================================
