@@ -790,18 +790,8 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
       <button data-k="アイデア" class="active" type="button">アイデア</button>
       <button data-k="ToDo" type="button">To Do</button>
     </div>
-    <div class="chip-row idea-tags" id="wm-cm-tags">
-      <button data-t="all" class="active" type="button">すべて</button>
-      <button data-t="キャラクター" type="button">キャラクター</button>
-      <button data-t="ストーリー" type="button">ストーリー</button>
-      <button data-t="ウィット" type="button">ウィット</button>
-      <button data-t="コンセプト" type="button">コンセプト</button>
-      <button class="mix-btn" id="wm-mix" type="button">ミックス</button>
-    </div>
-    <div class="field" style="margin:.7rem 0 .55rem">
-      <textarea id="wm-comment" rows="4" enterkeyhint="enter"></textarea>
-    </div>
-    <div class="chip-row idea-tags" id="wm-new-tags">
+
+    <div class="chip-row idea-tags" id="wm-new-tags" style="margin-bottom:.55rem">
       <span class="tag-note">タグ：</span>
       <button data-t="" class="active" type="button">なし</button>
       <button data-t="キャラクター" type="button">キャラクター</button>
@@ -809,8 +799,21 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
       <button data-t="ウィット" type="button">ウィット</button>
       <button data-t="コンセプト" type="button">コンセプト</button>
     </div>
-    <button id="wm-comment-save" class="btn btn-ghost btn-block" type="button" style="margin-top:.6rem">書き残す</button>
+    <div class="field" style="margin-bottom:.55rem">
+      <textarea id="wm-comment" rows="4" enterkeyhint="enter"></textarea>
+    </div>
+    <button id="wm-comment-save" class="btn btn-ghost btn-block" type="button">書き残す</button>
     <p id="wm-comment-msg" class="err" style="margin-top:.3rem"></p>
+
+    <h3>一覧</h3>
+    <div class="chip-row idea-tags" id="wm-cm-tags" style="margin-bottom:.4rem">
+      <button data-t="all" class="active" type="button">すべて</button>
+      <button data-t="キャラクター" type="button">キャラクター</button>
+      <button data-t="ストーリー" type="button">ストーリー</button>
+      <button data-t="ウィット" type="button">ウィット</button>
+      <button data-t="コンセプト" type="button">コンセプト</button>
+      <button class="mix-btn" id="wm-mix" type="button">ミックス</button>
+    </div>
     <div id="wm-comments"></div>
     <p id="wm-comments-empty" class="muted">まだコメントがありません。</p>
 
