@@ -102,6 +102,7 @@ input,select,textarea{font-family:inherit;font-size:1rem;color:var(--sumi)}
 .err{color:var(--aka);font-size:.85rem;margin-top:.5rem;min-height:1.2em}
 .ok{color:var(--midori);font-size:.85rem;margin-top:.5rem}
 .hidden{display:none!important}
+.ver{text-align:center;font-size:.68rem;color:var(--sumi-soft);opacity:.7;margin-top:.9rem}
 
 /* ===== ログイン画面 ===== */
 #auth-screen{
@@ -111,12 +112,7 @@ input,select,textarea{font-family:inherit;font-size:1rem;color:var(--sumi)}
 }
 .auth-box{width:100%;max-width:400px;margin:auto}
 /* 入力を確実に受け付ける（アプリ形式で開いた場合の対策） */
-input,textarea,select{
-  -webkit-user-select:text;user-select:text;
-  -webkit-touch-callout:default;
-  pointer-events:auto;
-  font-size:16px;   /* 16px未満だと拡大や不具合の原因になる */
-}
+input,textarea,select{font-size:16px}   /* 16px未満だと拡大や不具合の原因になる */
 .auth-title{
   font-family:var(--maru);text-align:center;margin-bottom:1.8rem;
   font-size:2.4rem;font-weight:700;letter-spacing:.3em;text-indent:.3em;color:var(--sumi);
@@ -482,6 +478,7 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
       </div>
       <button id="auth-submit" class="btn btn-primary btn-block" type="button">ログイン</button>
       <p id="auth-msg" class="err"></p>
+      <p class="ver">version 2026-08-04 / <span id="ver-mode"></span></p>
     </div>
   </div>
 </div>
@@ -848,57 +845,9 @@ if ("serviceWorker" in navigator && location.protocol === "https:") {
   });
 }
 
-/* ---- 入力欄の共通対策（アプリ形式でキーボードが出ない場合の保険） ---- */
+/* ---- 画面まわりの調整（入力そのものには一切干渉しない） ---- */
 (function(){
-  const isField = el => el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT");
-
-  // タップした入力欄に確実にフォーカスを移し、キーボードを開く
-  // （アプリ形式のiOSでは、既定の処理に任せるとキーボードが出ないことが
-  //   あるため、タップの瞬間に自前でフォーカスを与える）
-  const forceFocus = e => {
-    const t = e.target;
-    const el = t && t.closest ? t.closest("input, textarea") : null;
-    if (!el || el.disabled || el.readOnly) return;
-    if (document.activeElement === el) return;   // 既に開いていれば触らない
-    e.preventDefault();                           // 既定処理との競合を断つ
-    el.focus();
-    try {
-      if (el.setSelectionRange && /^(text|search|email|url|tel|password)$/.test(el.type || "text")) {
-        const len = el.value.length;
-        el.setSelectionRange(len, len);
-      }
-    } catch (_) {}
-  };
-  document.addEventListener("touchend", forceFocus, { capture:true, passive:false });
-
-  // アプリを切り替えて戻ったあとにキーボードが出なくなる現象への対策
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) return;
-    const a = document.activeElement;
-    if (isField(a)) { a.blur(); setTimeout(() => a.focus(), 80); }
-  });
-
-  // ラベルのタップでも入力欄を開く
-  document.addEventListener("click", e => {
-    const label = e.target.closest && e.target.closest("label[for]");
-    if (!label) return;
-    const el = document.getElementById(label.getAttribute("for"));
-    if (isField(el)) el.focus();
-  }, true);
-
-  // キーボードで隠れないよう、入力欄を画面内へ寄せる
-  document.addEventListener("focusin", e => {
-    const el = e.target;
-    if (!isField(el)) return;
-    const bring = () => {
-      try {
-        const modal = el.closest(".modal");
-        el.scrollIntoView({ block: modal ? "center" : "center", behavior: "smooth" });
-      } catch (_) {}
-    };
-    setTimeout(bring, 250);
-    setTimeout(bring, 550);   // キーボードが出きってからもう一度
-  });
+  const isField = el => el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA");
 
   // キーボードで隠れる分を差し引いた「実際に見えている高さ」を反映する
   const vv = window.visualViewport;
@@ -913,13 +862,23 @@ if ("serviceWorker" in navigator && location.protocol === "https:") {
   }
   window.addEventListener("orientationchange", () => setTimeout(applyViewport, 300));
 
+  // 入力欄がキーボードに隠れないよう、画面内へ寄せる（受け身の処理のみ）
+  document.addEventListener("focusin", e => {
+    if (!isField(e.target)) return;
+    const bring = () => {
+      try { e.target.scrollIntoView({ block:"center", behavior:"smooth" }); } catch (_) {}
+    };
+    setTimeout(bring, 300);
+    setTimeout(bring, 600);
+  });
+
   // 入力に応じて高さが伸びるテキストエリア
-  const grow = el => {
-    if (el.tagName !== "TEXTAREA") return;
+  document.addEventListener("input", e => {
+    const el = e.target;
+    if (!el || el.tagName !== "TEXTAREA") return;
     el.style.height = "auto";
     el.style.height = Math.min(el.scrollHeight, 14 * 16) + "px";
-  };
-  document.addEventListener("input", e => grow(e.target));
+  });
 
   // モーダルの開閉で body のスクロール禁止が残らないようにする
   const unstick = () => {
@@ -955,6 +914,8 @@ let todayGoal = null, todayChars = 0, todayHaiku = 0;
 /* ---- 起動 ---- */
 window.addEventListener("DOMContentLoaded", async () => {
   if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_")) { $("setup-screen").classList.remove("hidden"); return; }
+  const standalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  $("ver-mode").textContent = standalone ? "アプリ表示" : "ブラウザ表示";
   sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
   bindAuth(); bindApp();
   const { data:{ session } } = await sb.auth.getSession();
