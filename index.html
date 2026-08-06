@@ -735,7 +735,7 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
         </div>
       </div>
     </div>
-    <p class="muted" style="margin-bottom:.9rem">使わないほうは空欄のままで構いません。両方に入れると、どちらも達成したときに緑になります。</p>
+    <p class="muted" style="margin-bottom:.9rem">一度決めた目標は、翌日以降もそのまま引き継がれます。使わないほうは空欄のままで構いません。両方に入れると、どちらも達成したときに緑になります。</p>
     <button id="goal-modal-save" class="btn btn-primary btn-block" type="button">目標を決める</button>
     <button id="goal-modal-clear" class="btn btn-ghost btn-block" type="button" style="margin-top:.5rem">目標を取り消す</button>
     <p id="goal-modal-msg" class="err"></p>
@@ -1103,7 +1103,8 @@ async function refreshToday(){
   const [recRes, goalRes] = await Promise.all([
     sb.from(T_RECORDS).select(`id, amount, work_id, works:${T_WORKS}(name, category)`)
       .eq("date", today).eq("user_id", currentUser.id).order("created_at",{ascending:true}),
-    sb.from(T_GOALS).select("*").eq("date", today).eq("user_id", currentUser.id).maybeSingle()
+    sb.from(T_GOALS).select("*").eq("user_id", currentUser.id)
+      .lte("date", today).order("date",{ascending:false}).limit(1)
   ]);
   const rows = recRes.data || [];
   todayChars = 0; todayHaiku = 0; todayByWork = {};
@@ -1112,7 +1113,16 @@ async function refreshToday(){
     if (haiku) todayHaiku += r.amount; else todayChars += r.amount;
     todayByWork[r.work_id] = (todayByWork[r.work_id]||0) + r.amount;
   });
-  todayGoal = goalRes.error ? null : (goalRes.data || null);
+  // 直近に決めた目標をそのまま今日の目標として引き継ぐ
+  const latest = goalRes.error ? null : ((goalRes.data && goalRes.data[0]) || null);
+  todayGoal = latest ? { ...latest, date: today } : null;
+  if (latest && latest.date !== today && ((latest.target_chars||0) > 0 || (latest.target_haiku||0) > 0)){
+    // 今日の行として控えておく（記録として残し、以降の読み込みを軽くする）
+    sb.from(T_GOALS).upsert(
+      { user_id: currentUser.id, date: today,
+        target_chars: latest.target_chars || 0, target_haiku: latest.target_haiku || 0 },
+      { onConflict: "user_id,date" }).then(() => {}, () => {});
+  }
   renderTodayList(rows);
   renderGoalBadge();
   renderGoalButton();
@@ -1187,7 +1197,10 @@ async function saveGoal(){
   closeModal("goal-modal");
 }
 async function clearGoal(){
-  const { error } = await sb.from(T_GOALS).delete().eq("user_id", currentUser.id).eq("date", todayStr());
+  if (!confirm("目標を取り消しますか？\n以降の日にも引き継がれなくなります。")) return;
+  const { error } = await sb.from(T_GOALS).upsert(
+    { user_id: currentUser.id, date: todayStr(), target_chars: 0, target_haiku: 0 },
+    { onConflict: "user_id,date" });
   if (error){ $("goal-modal-msg").textContent = "取り消せませんでした：" + error.message; return; }
   await refreshToday();
   closeModal("goal-modal");
