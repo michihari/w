@@ -214,6 +214,7 @@ main{max-width:760px;margin:0 auto;padding:1.4rem 1rem 3rem}
 .rec-list li:last-child{border-bottom:none}
 .rec-main{display:flex;flex-direction:column;gap:.22rem;min-width:0}
 .rec-main .t1{font-weight:700;font-size:.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rec-main .t2{font-size:.74rem;color:var(--sumi-soft);font-family:var(--maru)}
 .rec-amt{font-family:var(--maru);font-weight:700;white-space:nowrap}
 .rec-amt small{font-size:.7rem;color:var(--sumi-soft);margin-left:.15rem}
 
@@ -299,6 +300,23 @@ main{max-width:760px;margin:0 auto;padding:1.4rem 1rem 3rem}
 /* 作品詳細：小さめの状態切り替え */
 #wm-status-tabs{display:inline-flex;gap:.25rem;padding:.2rem;width:auto}
 #wm-status-tabs button{flex:0 0 auto;padding:.3rem .85rem;font-size:.75rem}
+
+/* 開始 → 終了 の入力 */
+.range-row{display:flex;align-items:center;gap:.5rem}
+.range-row input{
+  flex:1;min-width:0;padding:.7rem .85rem;border:1.5px solid var(--line);
+  border-radius:12px;background:#fff;outline:none;text-align:center;
+}
+.range-row input:focus{border-color:var(--kaze);box-shadow:0 0 0 3px var(--kaze-mist)}
+.range-row .arrow{flex-shrink:0;color:var(--sumi-soft);font-size:1rem}
+.calc{
+  margin-top:.45rem;font-size:.82rem;color:var(--sumi-soft);min-height:1.3em;
+  display:flex;align-items:baseline;gap:.3rem;
+}
+.calc b{font-family:var(--maru);font-size:1.15rem;font-weight:700;color:var(--kaze-deep)}
+.calc.zero b{color:var(--sumi-soft)}
+.calc.minus b{color:var(--aka)}
+.range-hint{font-size:.72rem;color:var(--sumi-soft);margin-top:.3rem}
 
 /* 作品詳細：数追加の行 */
 .wm-addrow{display:flex;gap:.5rem}
@@ -522,8 +540,18 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
           <select id="rec-work"></select>
         </div>
         <div class="field">
-          <label for="rec-amount" id="rec-amount-label">文字数</label>
-          <input id="rec-amount" type="number" min="0" step="1" inputmode="numeric">
+          <label id="rec-amount-label">文字数</label>
+          <div class="filter-row kind-tabs" id="rec-mode">
+            <button data-m="range" class="active" type="button">開始 → 終了</button>
+            <button data-m="delta" type="button">書いた分</button>
+          </div>
+          <div class="range-row" id="rec-range">
+            <input id="rec-start" type="number" min="0" step="1" inputmode="numeric" aria-label="開始">
+            <span class="arrow">→</span>
+            <input id="rec-end" type="number" min="0" step="1" inputmode="numeric" aria-label="終了">
+          </div>
+          <input id="rec-amount" class="hidden" type="number" min="0" step="1" inputmode="numeric">
+          <p class="calc" id="rec-calc"></p>
         </div>
         <button id="btn-save-record" class="btn btn-shu btn-block" type="button">記録する</button>
         <p id="rec-msg" class="err"></p>
@@ -772,10 +800,20 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
     </div>
 
     <h3 id="wm-add-label">文字数を追加</h3>
-    <div class="wm-addrow">
-      <input id="wm-amount" type="number" min="0" step="1" inputmode="numeric">
-      <button id="wm-add" class="btn btn-primary" type="button">追加</button>
+    <div class="filter-row kind-tabs" id="wm-mode" style="margin-bottom:.5rem">
+      <button data-m="range" class="active" type="button">開始 → 終了</button>
+      <button data-m="delta" type="button">書いた分</button>
     </div>
+    <div class="range-row" id="wm-range">
+      <input id="wm-start" type="number" min="0" step="1" inputmode="numeric" aria-label="開始">
+      <span class="arrow">→</span>
+      <input id="wm-end" type="number" min="0" step="1" inputmode="numeric" aria-label="終了">
+    </div>
+    <div class="wm-addrow hidden" id="wm-delta-row">
+      <input id="wm-amount" type="number" min="0" step="1" inputmode="numeric">
+    </div>
+    <p class="calc" id="wm-calc"></p>
+    <button id="wm-add" class="btn btn-primary btn-block" type="button" style="margin-top:.5rem">記録する</button>
     <p id="wm-add-msg" class="err" style="margin-top:.3rem"></p>
 
     <h3>執筆履歴</h3>
@@ -903,6 +941,8 @@ const dayStr  = t => new Date(t).toLocaleDateString("ja-JP",{year:"numeric",mont
 let sb = null, currentUser = null, isMaster = false;
 let works = [], chart = null, currentPeriod = "week";
 let commentCounts = {}, todayByWork = {};
+let workTotals = {}, workPos = {};
+let recMode = "range", wmMode = "range";
 let workFilterStatus = "執筆中", workFilterCat = "all", workNewCat = "小説";
 let detailWorkId = null;
 let wmCmKind = "アイデア", wmCmTag = "all", wmNewTag = "";
@@ -988,6 +1028,27 @@ function bindApp(){
 
   $("btn-save-record").onclick = saveRecord;
   $("rec-work").onchange = updateAmountLabel;
+  document.querySelectorAll("#rec-mode button").forEach(b => {
+    b.onclick = () => {
+      recMode = b.dataset.m;
+      document.querySelectorAll("#rec-mode button").forEach(x => x.classList.toggle("active", x===b));
+      $("rec-range").classList.toggle("hidden", recMode !== "range");
+      $("rec-amount").classList.toggle("hidden", recMode !== "delta");
+      updateRecCalc();
+    };
+  });
+  ["rec-start","rec-end","rec-amount"].forEach(id => $(id).addEventListener("input", updateRecCalc));
+
+  document.querySelectorAll("#wm-mode button").forEach(b => {
+    b.onclick = () => {
+      wmMode = b.dataset.m;
+      document.querySelectorAll("#wm-mode button").forEach(x => x.classList.toggle("active", x===b));
+      $("wm-range").classList.toggle("hidden", wmMode !== "range");
+      $("wm-delta-row").classList.toggle("hidden", wmMode !== "delta");
+      updateWmCalc();
+    };
+  });
+  ["wm-start","wm-end","wm-amount"].forEach(id => $(id).addEventListener("input", updateWmCalc));
   $("btn-add-work").onclick = addWork;
   document.querySelectorAll("#status-tabs button").forEach(b => {
     b.onclick = () => {
@@ -1212,15 +1273,27 @@ async function clearGoal(){
 async function saveRecord(){
   const msg = $("rec-msg"); msg.className="err"; msg.textContent = "";
   const workId = $("rec-work").value;
-  const amount = parseInt($("rec-amount").value, 10);
   if (!workId){ msg.textContent = "作品を選んでください。まだ無ければ書斎でつくれます。"; return; }
-  if (!(amount >= 0)){ msg.textContent = "数を入力してください。"; return; }
-  const { error } = await sb.from(T_RECORDS).insert({ user_id: currentUser.id, work_id: workId, date: todayStr(), amount });
-  if (error){ msg.textContent = translateWriteError(error.message); return; }
   const w = works.find(x=>x.id===workId);
+  const unit = unitOf(w ? w.category : "");
+
+  const row = { user_id: currentUser.id, work_id: workId, date: todayStr() };
+  if (recMode === "range"){
+    const r = calcDiff("rec-start","rec-end");
+    if (!r){ msg.textContent = "開始と終了の数を入力してください。"; return; }
+    if (r.diff < 0){ msg.textContent = "終了は開始より大きい数にしてください。"; return; }
+    row.amount = r.diff; row.start_amount = r.st; row.end_amount = r.en;
+  } else {
+    const a = parseInt($("rec-amount").value, 10);
+    if (!(a >= 0)){ msg.textContent = "数を入力してください。"; return; }
+    row.amount = a;
+  }
+  const { error } = await sb.from(T_RECORDS).insert(row);
+  if (error){ msg.textContent = translateWriteError(error.message); return; }
   msg.className = "ok";
-  msg.textContent = `記録しました：${w?w.name:""} ${fmt(amount)}${unitOf(w?w.category:"")}`;
-  $("rec-amount").value = "";
+  msg.textContent = `記録しました：${w?w.name:""} ${fmt(row.amount)}${unit}`;
+  await loadWorkStats();
+  updateAmountLabel();
   await refreshToday();
 }
 function translateWriteError(m){
@@ -1236,7 +1309,9 @@ function renderTodayList(rows){
     return `<li>
       <div class="rec-main">
         <span class="t1">${esc(nm)}</span>
-        <span><span class="tag ${cat==="俳句"?"tag-haiku":""}">${esc(cat)}</span></span>
+        <span><span class="tag ${cat==="俳句"?"tag-haiku":""}">${esc(cat)}</span>${
+          (r.start_amount != null && r.end_amount != null)
+            ? ` <span class="t2">${fmt(r.start_amount)} → ${fmt(r.end_amount)}</span>` : ""}</span>
       </div>
       <span class="rec-amt">${fmt(r.amount)}<small>${unitOf(cat)}</small></span>
       <button class="btn btn-ghost btn-sm" onclick="deleteRecord('${r.id}')">取消</button>
@@ -1247,6 +1322,8 @@ async function deleteRecord(id){
   if (!confirm("この記録を取り消しますか？")) return;
   const { error } = await sb.from(T_RECORDS).delete().eq("id", id);
   if (error){ alert("取消できませんでした：" + error.message); return; }
+  await loadWorkStats();
+  updateAmountLabel();
   await refreshToday();
   await renderWorksList();
 }
@@ -1254,6 +1331,19 @@ async function deleteRecord(id){
 /* =====================================================================
    書斎（作品管理）
    ===================================================================== */
+async function loadWorkStats(){
+  const { data, error } = await sb.from(T_RECORDS)
+    .select("work_id, amount, end_amount, date, created_at")
+    .eq("user_id", currentUser.id)
+    .order("date",{ascending:true}).order("created_at",{ascending:true});
+  if (error){ console.error(error); return; }
+  workTotals = {}; workPos = {};
+  (data||[]).forEach(r => {
+    workTotals[r.work_id] = (workTotals[r.work_id]||0) + r.amount;
+    if (r.end_amount != null) workPos[r.work_id] = r.end_amount;  // 時系列順なので最後が残る
+  });
+  Object.keys(workTotals).forEach(k => { if (workPos[k] == null) workPos[k] = workTotals[k]; });
+}
 async function loadWorks(){
   const { data, error } = await sb.from(T_WORKS).select("*")
     .eq("user_id", currentUser.id).order("created_at",{ascending:true});
@@ -1273,10 +1363,54 @@ function fillWorkSelects(){
   if (cur) $("cm-filter").value = cur;
   updateAmountLabel();
 }
+function calcDiff(startEl, endEl){
+  const st = parseInt($(startEl).value, 10);
+  const en = parseInt($(endEl).value, 10);
+  if (!(st >= 0) || !(en >= 0)) return null;
+  return { st, en, diff: en - st };
+}
+function showCalc(calcId, diff, unit){
+  const el = $(calcId);
+  el.classList.remove("zero","minus");
+  if (diff == null){ el.innerHTML = ""; return; }
+  if (diff < 0){
+    el.classList.add("minus");
+    el.innerHTML = `<b>${fmt(diff)}</b> ${unit}　終了は開始より大きい数にしてください`;
+    return;
+  }
+  if (diff === 0) el.classList.add("zero");
+  el.innerHTML = `この日書いた分　<b>${fmt(diff)}</b> ${unit}`;
+}
+function updateRecCalc(){
+  const w = works.find(x => x.id === $("rec-work").value);
+  const unit = unitOf(w ? w.category : "");
+  if (recMode !== "range"){
+    const a = parseInt($("rec-amount").value, 10);
+    showCalc("rec-calc", a >= 0 ? a : null, unit);
+    return;
+  }
+  const r = calcDiff("rec-start","rec-end");
+  showCalc("rec-calc", r ? r.diff : null, unit);
+}
+function updateWmCalc(){
+  const w = works.find(x => x.id === detailWorkId);
+  const unit = unitOf(w ? w.category : "");
+  if (wmMode !== "range"){
+    const a = parseInt($("wm-amount").value, 10);
+    showCalc("wm-calc", a >= 0 ? a : null, unit);
+    return;
+  }
+  const r = calcDiff("wm-start","wm-end");
+  showCalc("wm-calc", r ? r.diff : null, unit);
+}
 function updateAmountLabel(){
   const w = works.find(x => x.id === $("rec-work").value);
   const haiku = w && w.category === "俳句";
   $("rec-amount-label").textContent = haiku ? "句数" : "文字数";
+  $("rec-start").value = w ? (workPos[w.id] || 0) : "";
+  $("rec-end").value = "";
+  $("rec-amount").value = "";
+  updateRecCalc();
 }
 async function addWork(){
   const name = $("work-name").value.trim(), category = workNewCat;
@@ -1295,12 +1429,11 @@ async function renderWorksList(){
     $("works-empty").classList.remove("hidden");
     return;
   }
-  const [{ data: recs }, { data: cms }] = await Promise.all([
-    sb.from(T_RECORDS).select("work_id, amount").eq("user_id", currentUser.id),
+  const [, { data: cms }] = await Promise.all([
+    loadWorkStats(),
     sb.from(T_COMMENTS).select("work_id").eq("user_id", currentUser.id)
   ]);
-  const totals = {};
-  (recs||[]).forEach(r => totals[r.work_id] = (totals[r.work_id]||0) + r.amount);
+  const totals = workTotals;
   commentCounts = {};
   (cms||[]).forEach(c => commentCounts[c.work_id] = (commentCounts[c.work_id]||0) + 1);
 
@@ -1358,7 +1491,6 @@ async function deleteWork(id){
 async function openWorkModal(workId){
   const w = works.find(x=>x.id===workId); if(!w) return;
   detailWorkId = workId;
-  $("wm-amount").value = "";
   $("wm-comment").value = "";
   $("wm-add-msg").textContent = "";
   $("wm-comment-msg").textContent = "";
@@ -1367,6 +1499,7 @@ async function openWorkModal(workId){
   document.querySelectorAll("#wm-new-tags button").forEach(x => x.classList.remove("active"));
   syncKindUI();
   renderWorkModalHead();
+  wmResetInputs();
   openModal("work-modal");
   await Promise.all([renderWorkHistory(), renderWorkComments()]);
 }
@@ -1393,7 +1526,7 @@ async function renderWorkHistory(){
   const w = works.find(x=>x.id===detailWorkId); if(!w) return;
   const unit = unitOf(w.category);
   const { data, error } = await sb.from(T_RECORDS)
-    .select("id, date, amount")
+    .select("id, date, amount, start_amount, end_amount")
     .eq("work_id", detailWorkId)
     .order("date",{ascending:false}).order("created_at",{ascending:false})
     .limit(200);
@@ -1406,8 +1539,10 @@ async function renderWorkHistory(){
   $("wm-history").innerHTML = rows.map(r => {
     const d = r.date === today ? "本日" :
       new Date(r.date+"T00:00:00").toLocaleDateString("ja-JP",{year:"numeric",month:"numeric",day:"numeric"});
+    const range = (r.start_amount != null && r.end_amount != null)
+      ? `<span class="t2">${fmt(r.start_amount)} → ${fmt(r.end_amount)}</span>` : "";
     return `<li>
-      <div class="rec-main"><span class="t1">${d}</span></div>
+      <div class="rec-main"><span class="t1">${d}</span>${range}</div>
       <span class="rec-amt">${fmt(r.amount)}<small>${unit}</small></span>
       <button class="btn btn-ghost btn-sm" onclick="wmDeleteRecord('${r.id}')">取消</button>
     </li>`;
@@ -1416,22 +1551,42 @@ async function renderWorkHistory(){
 async function wmAddRecord(){
   const msg = $("wm-add-msg"); msg.className="err"; msg.textContent="";
   const w = works.find(x=>x.id===detailWorkId); if(!w) return;
-  const amount = parseInt($("wm-amount").value,10);
-  if (!(amount >= 0)){ msg.textContent = "数を入力してください。"; return; }
-  const { error } = await sb.from(T_RECORDS).insert(
-    { user_id: currentUser.id, work_id: detailWorkId, date: todayStr(), amount });
+  const unit = unitOf(w.category);
+
+  const row = { user_id: currentUser.id, work_id: detailWorkId, date: todayStr() };
+  if (wmMode === "range"){
+    const r = calcDiff("wm-start","wm-end");
+    if (!r){ msg.textContent = "開始と終了の数を入力してください。"; return; }
+    if (r.diff < 0){ msg.textContent = "終了は開始より大きい数にしてください。"; return; }
+    row.amount = r.diff; row.start_amount = r.st; row.end_amount = r.en;
+  } else {
+    const a = parseInt($("wm-amount").value,10);
+    if (!(a >= 0)){ msg.textContent = "数を入力してください。"; return; }
+    row.amount = a;
+  }
+  const { error } = await sb.from(T_RECORDS).insert(row);
   if (error){ msg.textContent = translateWriteError(error.message); return; }
-  msg.className="ok"; msg.textContent = `追加しました：${fmt(amount)}${unitOf(w.category)}`;
-  $("wm-amount").value = "";
+  msg.className="ok"; msg.textContent = `記録しました：${fmt(row.amount)}${unit}`;
+  await loadWorkStats();
+  wmResetInputs();
   await refreshToday();
   renderWorkModalHead();
   await renderWorkHistory();
   await renderWorksList();
 }
+function wmResetInputs(){
+  const w = works.find(x=>x.id===detailWorkId);
+  $("wm-start").value = w ? (workPos[w.id] || 0) : "";
+  $("wm-end").value = "";
+  $("wm-amount").value = "";
+  updateWmCalc();
+}
 async function wmDeleteRecord(id){
   if (!confirm("この記録を取り消しますか？")) return;
   const { error } = await sb.from(T_RECORDS).delete().eq("id", id);
   if (error){ alert("取消できませんでした：" + error.message); return; }
+  await loadWorkStats();
+  wmResetInputs();
   await refreshToday();
   renderWorkModalHead();
   await renderWorkHistory();
