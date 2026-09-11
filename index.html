@@ -15,12 +15,21 @@
 <link rel="icon" href="./icon-192.png">
 <link rel="manifest" href="./manifest.webmanifest">
 
+<!-- 先に接続だけ済ませておく（データベース・部品・フォント） -->
+<link rel="preconnect" href="https://tstbqfkwnpntabdmksfm.supabase.co" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0"></script>
+<!-- 必須の部品は先読みしつつ、画面の表示を止めない（defer） -->
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0" as="script" crossorigin>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0"></script>
+
+<!-- フォントは後から差し替え（読み込み完了を待たずに画面を出す） -->
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet"></noscript>
+
+<!-- グラフの部品は統計を開いたときに読み込む（起動時には不要） -->
 
 <style>
 :root{
@@ -102,6 +111,13 @@ input,select,textarea{font-family:inherit;font-size:1rem;color:var(--sumi)}
 .err{color:var(--aka);font-size:.85rem;margin-top:.5rem;min-height:1.2em}
 .ok{color:var(--midori);font-size:.85rem;margin-top:.5rem}
 .hidden{display:none!important}
+#upd-toast{
+  position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 1rem);transform:translateX(-50%);
+  z-index:200;background:var(--sumi);color:#fff;font-size:.82rem;
+  padding:.6rem .9rem .6rem 1.1rem;border-radius:999px;display:flex;align-items:center;gap:.7rem;
+  box-shadow:0 6px 20px rgba(58,66,63,.25);white-space:nowrap;
+}
+#upd-toast button{background:var(--kaze);color:#fff;border:none;border-radius:999px;padding:.35rem .8rem;font-size:.8rem;font-weight:700}
 .ver{text-align:center;font-size:.68rem;color:var(--sumi-soft);opacity:.7;margin-top:.9rem}
 
 /* ===== ログイン画面 ===== */
@@ -336,6 +352,9 @@ main{max-width:760px;margin:0 auto;padding:1.4rem 1rem 3rem}
 .comment-item .when{font-size:.72rem;color:var(--sumi-soft)}
 .comment-item .body{font-size:.92rem;line-height:1.9;white-space:pre-wrap}
 .comment-item .cm-btns{display:flex;gap:.3rem;flex-shrink:0}
+.tap-edit{cursor:text;border-radius:10px;padding:.25rem .45rem;margin:0 -.45rem;transition:background .15s}
+.tap-edit:hover{background:rgba(78,139,132,.06)}
+.tap-edit:active{background:var(--kaze-mist)}
 .cm-edit{margin-top:.4rem}
 .cm-edit-area{
   width:100%;padding:.7rem .85rem;border:1.5px solid var(--kaze);border-radius:12px;
@@ -496,7 +515,7 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
       </div>
       <button id="auth-submit" class="btn btn-primary btn-block" type="button">ログイン</button>
       <p id="auth-msg" class="err"></p>
-      <p class="ver">version 2026-08-04 / <span id="ver-mode"></span></p>
+      <p class="ver">version 2026-09-11 / <span id="ver-mode"></span></p>
     </div>
   </div>
 </div>
@@ -876,11 +895,43 @@ const PFX = "shippitsu_";
 const T_WORKS = PFX+"works", T_RECORDS = PFX+"records", T_COMMENTS = PFX+"comments",
       T_GOALS = PFX+"goals", T_PROFILES = PFX+"profiles";
 
+/* ---- グラフ部品の遅延読み込み ---- */
+let chartLibPromise = null;
+function ensureChart(){
+  if (window.Chart) return Promise.resolve();
+  if (!chartLibPromise){
+    chartLibPromise = new Promise((res, rej) => {
+      const el = document.createElement("script");
+      el.src = "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js";
+      el.onload = res; el.onerror = () => { chartLibPromise = null; rej(new Error("chart load failed")); };
+      document.head.appendChild(el);
+    });
+  }
+  return chartLibPromise;
+}
+// 起動が落ち着いたら裏で先読みしておく
+window.addEventListener("load", () => {
+  const idle = window.requestIdleCallback || (fn => setTimeout(fn, 2500));
+  idle(() => ensureChart().catch(() => {}));
+});
+
 /* ---- サービスワーカー登録（ホーム画面からアプリとして起動するため） ---- */
 if ("serviceWorker" in navigator && location.protocol === "https:") {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./sw.js").catch(err => console.warn("SW未登録", err));
   });
+  // 裏で新しい版が届いたら、小さく知らせる
+  navigator.serviceWorker.addEventListener("message", e => {
+    if (e.data && e.data.type === "updated") showUpdateToast();
+  });
+}
+function showUpdateToast(){
+  if (document.getElementById("upd-toast")) return;
+  const t = document.createElement("div");
+  t.id = "upd-toast";
+  t.innerHTML = `新しい版があります <button type="button">更新する</button>`;
+  t.querySelector("button").onclick = () => location.reload();
+  document.body.appendChild(t);
 }
 
 /* ---- 画面まわりの調整（入力そのものには一切干渉しない） ---- */
@@ -1015,8 +1066,8 @@ async function enterApp(user){
   $("who-email").textContent = user.email;
   $("who-master").classList.toggle("hidden", !isMaster);
   $("tab-admin").classList.toggle("hidden", !isMaster);
-  await loadWorks();
-  await refreshToday();
+  // 作品・累計・本日の記録を同時に取りに行く（順番待ちをしない）
+  await Promise.all([loadWorks(), refreshToday()]);
 }
 
 /* =====================================================================
@@ -1345,12 +1396,15 @@ async function loadWorkStats(){
   Object.keys(workTotals).forEach(k => { if (workPos[k] == null) workPos[k] = workTotals[k]; });
 }
 async function loadWorks(){
-  const { data, error } = await sb.from(T_WORKS).select("*")
-    .eq("user_id", currentUser.id).order("created_at",{ascending:true});
+  const [{ data, error }] = await Promise.all([
+    sb.from(T_WORKS).select("*").eq("user_id", currentUser.id).order("created_at",{ascending:true}),
+    loadWorkStats()
+  ]);
   if (error){ console.error(error); return; }
   works = data || [];
   fillWorkSelects();
-  await renderWorksList();
+  // 作品一覧は書斎を開いているときだけ描く（起動時の待ちを減らす）
+  if (!$("page-works").classList.contains("hidden")) await renderWorksList();
 }
 function fillWorkSelects(){
   const opts = works.map(w => {
@@ -1610,11 +1664,10 @@ function commentItemHTML(c, inModal, workLabel){
     return `<div class="todo-item ${c.done?"done":""}" id="cm-${c.id}">
       <button class="todo-check" type="button" onclick="toggleTodo('${c.id}', ${inModal}, event)">✓</button>
       <div class="todo-body">
-        <div class="todo-text body">${esc(c.body)}</div>
+        <div class="todo-text body tap-edit" onclick="startEditComment('${c.id}', ${inModal})">${esc(c.body)}</div>
         <div class="todo-when">${head}${whenStr(c.created_at)}${edited}</div>
       </div>
       <span class="cm-btns">
-        <button class="btn btn-ghost btn-sm" onclick="startEditComment('${c.id}', ${inModal})">編集</button>
         <button class="btn btn-ghost btn-sm" onclick="deleteComment('${c.id}', ${inModal})">削除</button>
       </span>
     </div>`;
@@ -1627,11 +1680,10 @@ function commentItemHTML(c, inModal, workLabel){
         <span class="when">${whenStr(c.created_at)}${edited}</span>
       </span>
       <span class="cm-btns">
-        <button class="btn btn-ghost btn-sm" onclick="startEditComment('${c.id}', ${inModal})">編集</button>
         <button class="btn btn-ghost btn-sm" onclick="deleteComment('${c.id}', ${inModal})">削除</button>
       </span>
     </div>
-    <div class="body">${esc(c.body)}</div>
+    <div class="body tap-edit" onclick="startEditComment('${c.id}', ${inModal})">${esc(c.body)}</div>
   </div>`;
 }
 async function wmAddComment(){
@@ -1697,6 +1749,16 @@ async function wmDelete(){
 function startEditComment(id, inModal){
   const box = document.getElementById("cm-" + id);
   if (!box || box.querySelector(".cm-edit")) return;
+  // 他で編集中のものがあれば、そちらは閉じる（内容が変わっていなければ）
+  document.querySelectorAll(".cm-edit").forEach(w => {
+    const ta = w.querySelector("textarea"), parent = w.parentElement;
+    const orig = parent.querySelector(".body");
+    if (ta && orig && ta.value.trim() === orig.textContent.trim()){
+      w.remove();
+      orig.classList.remove("hidden");
+      const btns = parent.querySelector(".cm-btns"); if (btns) btns.classList.remove("hidden");
+    }
+  });
   const bodyEl = box.querySelector(".body");
   const current = bodyEl.textContent;
   bodyEl.classList.add("hidden");
@@ -1999,6 +2061,7 @@ async function renderStats(){
   const haikuData = labels.map(k => buckets[k]?.h || 0);
   const dispLabels = labels.map(k => byMonth ? k.replace("-","年")+"月" : k.slice(5).replace("-","/"));
 
+  try { await ensureChart(); } catch (_) { return; }
   if (chart) chart.destroy();
   chart = new Chart($("stat-chart"), {
     type:"bar",
