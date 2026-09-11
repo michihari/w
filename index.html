@@ -951,14 +951,31 @@ function showUpdateToast(){
   }
   window.addEventListener("orientationchange", () => setTimeout(applyViewport, 300));
 
-  // 入力欄がキーボードに隠れないよう、画面内へ寄せる（受け身の処理のみ）
+  // 入力欄がキーボードに隠れているときだけ、隠れている分だけそっと動かす
+  // （見えている場合は一切動かさない ＝ その場にとどまる）
+  const nudgeIntoView = el => {
+    const rect = el.getBoundingClientRect();
+    const visibleBottom = (vv ? vv.height : window.innerHeight);
+    const margin = 12;
+    let delta = 0;
+    if (rect.bottom > visibleBottom - margin) delta = rect.bottom - (visibleBottom - margin);
+    else if (rect.top < margin) delta = rect.top - margin;
+    if (delta === 0) return;
+
+    // モーダルの中なら、その中だけを動かす
+    let box = el.parentElement;
+    while (box && box !== document.body){
+      const st = getComputedStyle(box).overflowY;
+      if ((st === "auto" || st === "scroll") && box.scrollHeight > box.clientHeight) break;
+      box = box.parentElement;
+    }
+    if (box && box !== document.body) box.scrollTop += delta;
+    else window.scrollBy(0, delta);
+  };
   document.addEventListener("focusin", e => {
     if (!isField(e.target)) return;
-    const bring = () => {
-      try { e.target.scrollIntoView({ block:"center", behavior:"smooth" }); } catch (_) {}
-    };
-    setTimeout(bring, 300);
-    setTimeout(bring, 600);
+    const el = e.target;
+    setTimeout(() => nudgeIntoView(el), 320);   // キーボードが出きってから一度だけ
   });
 
   // 入力に応じて高さが伸びるテキストエリア
@@ -1781,11 +1798,14 @@ function startEditComment(id, inModal){
     bodyEl.classList.remove("hidden");
     box.querySelector(".cm-btns").classList.remove("hidden");
   };
+  const keepH = bodyEl.getBoundingClientRect().height;
   box.appendChild(wrap);
-  ta.focus();
-  ta.setSelectionRange(ta.value.length, ta.value.length);
+  // 元の文章と同じくらいの高さから始める（前後で高さが飛ばないように）
+  ta.style.height = Math.max(keepH + 24, 88) + "px";
+  try { ta.focus({ preventScroll: true }); } catch (_) { ta.focus(); }
+  try { ta.setSelectionRange(ta.value.length, ta.value.length); } catch (_) {}
   ta.style.height = "auto";
-  ta.style.height = Math.min(ta.scrollHeight, 14*16) + "px";
+  ta.style.height = Math.min(Math.max(ta.scrollHeight, keepH + 24), 14*16) + "px";
 }
 async function saveEditComment(id, inModal, ta, msgEl){
   const body = ta.value.trim();
