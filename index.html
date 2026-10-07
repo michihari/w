@@ -430,6 +430,23 @@ main{max-width:760px;margin:0 auto;padding:1.4rem 1rem 3rem}
   text-align:center;color:var(--sumi-soft);font-size:.95rem;line-height:2;
 }
 
+/* 完成作品一覧 */
+.done-item{
+  display:flex;align-items:center;justify-content:space-between;gap:.8rem;
+  padding:.8rem .2rem;border-bottom:1px solid var(--line);
+}
+.done-item:last-child{border-bottom:none}
+.done-item .d-main{min-width:0;display:flex;flex-direction:column;gap:.3rem}
+.done-item .d-name{
+  font-family:var(--maru);font-weight:700;font-size:1rem;line-height:1.4;overflow-wrap:anywhere;
+}
+.done-item .d-meta{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;font-size:.74rem;color:var(--sumi-soft)}
+.done-item .d-total{
+  flex-shrink:0;text-align:right;font-family:var(--maru);font-weight:700;font-size:1.02rem;
+}
+.done-item .d-total small{font-size:.68rem;font-weight:400;color:var(--sumi-soft);margin-left:.12rem}
+.done-item .d-total span{display:block;font-family:var(--gothic);font-size:.64rem;font-weight:400;color:var(--sumi-soft);margin-bottom:.05rem}
+
 /* 管理 */
 .acc-item{padding:.9rem .2rem;border-bottom:1px solid var(--line)}
 .acc-item:last-child{border-bottom:none}
@@ -710,6 +727,11 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
           <tbody id="by-cat-body"></tbody>
         </table>
         <p id="by-cat-empty" class="muted">この期間の記録はありません。</p>
+      </div>
+      <div class="card">
+        <h2>完成作品一覧</h2>
+        <div id="done-list"></div>
+        <p id="done-empty" class="muted">この期間に完成した作品はありません。</p>
       </div>
     </section>
 
@@ -1408,9 +1430,9 @@ async function loadWorkStats(){
   workTotals = {}; workPos = {};
   (data||[]).forEach(r => {
     workTotals[r.work_id] = (workTotals[r.work_id]||0) + r.amount;
-    if (r.end_amount != null) workPos[r.work_id] = r.end_amount;  // 時系列順なので最後が残る
   });
-  Object.keys(workTotals).forEach(k => { if (workPos[k] == null) workPos[k] = workTotals[k]; });
+  // 開始欄に入れる数は、その作品のこれまでの合計（全記録の合計）
+  Object.keys(workTotals).forEach(k => { workPos[k] = workTotals[k]; });
 }
 async function loadWorks(){
   const [{ data, error }] = await Promise.all([
@@ -1745,7 +1767,9 @@ function celebrate(x, y){
 async function wmSetStatus(next){
   const w = works.find(x=>x.id===detailWorkId); if(!w) return;
   if ((w.status||"執筆中") === next) return;
-  const { error } = await sb.from(T_WORKS).update({ status: next }).eq("id", detailWorkId);
+  // 完成にした日時を残す（執筆中に戻すときは消す）
+  const patch = { status: next, completed_at: next === "完成" ? new Date().toISOString() : null };
+  const { error } = await sb.from(T_WORKS).update(patch).eq("id", detailWorkId);
   if (error){ alert("変更できませんでした：" + error.message); return; }
   await loadWorks();
   renderWorkModalHead();
@@ -2034,7 +2058,35 @@ function periodRange(p){
   if (p==="year"){ d.setFullYear(d.getFullYear()-1); d.setDate(d.getDate()+1); return d; }
   return null;
 }
+async function renderDoneWorks(){
+  await loadWorkStats();
+  const from = periodRange(currentPeriod);
+  const fromStr = from ? dstr(from) : null;
+  // 完成日が無い（過去に完成にした）作品は、作成日で代用する
+  const doneDate = w => dstr(new Date(w.completed_at || w.created_at));
+  const rows = works
+    .filter(w => (w.status || "執筆中") === "完成")
+    .filter(w => !fromStr || doneDate(w) >= fromStr)
+    .sort((a,b) => (doneDate(b) < doneDate(a) ? -1 : doneDate(b) > doneDate(a) ? 1 : 0));
+  $("done-empty").classList.toggle("hidden", rows.length > 0);
+  $("done-list").innerHTML = rows.map(w => {
+    const d = new Date(w.completed_at || w.created_at)
+      .toLocaleDateString("ja-JP",{year:"numeric",month:"numeric",day:"numeric"});
+    const unit = unitOf(w.category);
+    return `<div class="done-item">
+      <div class="d-main">
+        <div class="d-name">${esc(w.name)}</div>
+        <div class="d-meta">
+          <span class="tag ${w.category==="俳句"?"tag-haiku":""}">${esc(w.category)}</span>
+          <span>${d} 完成</span>
+        </div>
+      </div>
+      <div class="d-total"><span>累計</span>${fmt(workTotals[w.id]||0)}<small>${unit}</small></div>
+    </div>`;
+  }).join("");
+}
 async function renderStats(){
+  renderDoneWorks();
   let q = sb.from(T_RECORDS).select(`date, amount, work_id, works:${T_WORKS}(name, category)`)
     .eq("user_id", currentUser.id);
   const from = periodRange(currentPeriod);
