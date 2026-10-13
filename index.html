@@ -47,6 +47,7 @@
   --ai:#2B4570;              /* 藍 — 俳句 */
   --ai-mist:rgba(43,69,112,.1);
   --midori:#4E9C72;          /* 達成の緑 */
+  --kimidori:#8AB23A;        /* 片方達成の黄緑 */
   --line:rgba(58,66,63,.1);
   --radius:18px;
   --shadow:0 2px 14px rgba(58,66,63,.06);
@@ -159,6 +160,7 @@ input,textarea,select{font-size:16px}   /* 16px未満だと拡大や不具合の
   background:var(--aka);text-align:right;line-height:1.15;min-width:5.4rem;
   transition:background .3s;box-shadow:var(--shadow);
 }
+.goal-badge.part{background:var(--kimidori)}
 .goal-badge.met{background:var(--midori)}
 .goal-badge.none{background:#fff;color:var(--sumi-soft);border:1.5px solid var(--line);box-shadow:none}
 .goal-badge .g-num{font-family:var(--maru);font-weight:700;font-size:1.02rem;display:block}
@@ -212,6 +214,15 @@ main{max-width:760px;margin:0 auto;padding:1.4rem 1rem 3rem}
 .goal-btn-head{display:flex;align-items:center;justify-content:space-between;gap:.6rem}
 .goal-btn.set .goal-btn-head{margin-bottom:.7rem}
 .goal-btn-edit{font-size:.74rem;font-weight:500;color:var(--kaze-deep)}
+/* 片方達成＝黄緑、両方達成＝緑 */
+.goal-btn.set.part{background:var(--kimidori);color:#fff}
+.goal-btn.set.all{background:var(--midori);color:#fff}
+.goal-btn.part .goal-btn-edit,.goal-btn.all .goal-btn-edit{color:rgba(255,255,255,.92)}
+.goal-btn.part .gp-name,.goal-btn.all .gp-name,
+.goal-btn.part .gp-val,.goal-btn.all .gp-val{color:rgba(255,255,255,.92)}
+.goal-btn.part .gp-val b,.goal-btn.all .gp-val b{color:#fff}
+.goal-btn.part .gp-bar,.goal-btn.all .gp-bar{background:rgba(255,255,255,.35)}
+.goal-btn.part .gp-bar i,.goal-btn.all .gp-bar i{background:#fff}
 .goal-btn-params{display:flex;flex-direction:column;gap:.55rem}
 .gp-row{display:grid;grid-template-columns:3.2rem 1fr auto;align-items:center;gap:.6rem}
 .gp-name{font-size:.75rem;font-weight:500;color:var(--sumi-soft)}
@@ -1278,31 +1289,40 @@ async function refreshToday(){
   renderGoalBadge();
   renderGoalButton();
 }
-function goalMet(){
-  if (!todayGoal) return false;
-  const tc = todayGoal.target_chars || 0, th = todayGoal.target_haiku || 0;
-  if (!tc && !th) return false;
-  return (!tc || todayChars >= tc) && (!th || todayHaiku >= th);
+/* 目標の達成状況
+   unset … 目標なし / none … どちらも未達 / part … 片方だけ達成 / all … 設定した目標をすべて達成 */
+function goalState(){
+  const tc = todayGoal ? (todayGoal.target_chars||0) : 0;
+  const th = todayGoal ? (todayGoal.target_haiku||0) : 0;
+  const n = (tc>0 ? 1:0) + (th>0 ? 1:0);
+  if (!n) return { level:"unset", tc, th, charsMet:false, haikuMet:false };
+  const charsMet = tc>0 && todayChars >= tc;
+  const haikuMet = th>0 && todayHaiku >= th;
+  const m = (charsMet?1:0) + (haikuMet?1:0);
+  const level = m === n ? "all" : (m > 0 ? "part" : "none");
+  return { level, tc, th, charsMet, haikuMet };
 }
 function renderGoalBadge(){
   const b = $("goal-badge");
-  const hasGoal = todayGoal && ((todayGoal.target_chars||0) > 0 || (todayGoal.target_haiku||0) > 0);
-  const showHaiku = todayHaiku > 0 || (todayGoal && (todayGoal.target_haiku||0) > 0);
+  const g = goalState();
+  const showHaiku = todayHaiku > 0 || g.th > 0;
   $("gb-num").innerHTML = fmt(todayChars) + "<small>字</small>" +
     (showHaiku ? " / " + fmt(todayHaiku) + "<small>句</small>" : "");
-  b.classList.remove("met","none");
-  if (!hasGoal){ b.classList.add("none"); $("gb-sub").textContent = "目標を設定"; return; }
-  if (goalMet()){ b.classList.add("met"); $("gb-sub").textContent = "目標達成"; return; }
+  b.classList.remove("met","part","none");
+  if (g.level === "unset"){ b.classList.add("none"); $("gb-sub").textContent = "目標を設定"; return; }
+  if (g.level === "all"){ b.classList.add("met"); $("gb-sub").textContent = "目標達成"; return; }
+  if (g.level === "part") b.classList.add("part");
+  // まだ届いていないほうだけ「あと◯」を出す
   const parts = [];
-  if (todayGoal.target_chars) parts.push("あと" + fmt(Math.max(0, todayGoal.target_chars - todayChars)) + "字");
-  if (todayGoal.target_haiku) parts.push("あと" + fmt(Math.max(0, todayGoal.target_haiku - todayHaiku)) + "句");
+  if (g.tc && !g.charsMet) parts.push("あと" + fmt(g.tc - todayChars) + "字");
+  if (g.th && !g.haikuMet) parts.push("あと" + fmt(g.th - todayHaiku) + "句");
   $("gb-sub").textContent = parts.join(" ");
 }
 function renderGoalButton(){
   const btn = $("btn-open-goal"), params = $("goal-btn-params");
-  const tc = todayGoal ? (todayGoal.target_chars||0) : 0;
-  const th = todayGoal ? (todayGoal.target_haiku||0) : 0;
-  if (!tc && !th){
+  const g = goalState();
+  btn.classList.remove("part","all");
+  if (g.level === "unset"){
     btn.classList.remove("set");
     $("goal-btn-title").textContent = "目標を設定する";
     $("goal-btn-edit").textContent = "";
@@ -1311,7 +1331,15 @@ function renderGoalButton(){
     return;
   }
   btn.classList.add("set");
-  $("goal-btn-title").textContent = goalMet() ? "今日の目標 — 達成" : "今日の目標";
+  if (g.level === "all"){
+    btn.classList.add("all");
+    $("goal-btn-title").textContent = "今日の目標 — 達成";
+  } else if (g.level === "part"){
+    btn.classList.add("part");
+    $("goal-btn-title").textContent = "今日の目標 — " + (g.charsMet ? "文字数" : "句数") + "を達成";
+  } else {
+    $("goal-btn-title").textContent = "今日の目標";
+  }
   $("goal-btn-edit").textContent = "変更する";
   const row = (name, cur, target, unit) => {
     const pct = target ? Math.min(100, Math.round(cur/target*100)) : 0;
@@ -1323,8 +1351,8 @@ function renderGoalButton(){
     </span>`;
   };
   let html = "";
-  if (tc) html += row("文字数", todayChars, tc, "字");
-  if (th) html += row("句数", todayHaiku, th, "句");
+  if (g.tc) html += row("文字数", todayChars, g.tc, "字");
+  if (g.th) html += row("句数", todayHaiku, g.th, "句");
   params.innerHTML = html;
   params.classList.remove("hidden");
 }
