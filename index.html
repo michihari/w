@@ -543,7 +543,7 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
       </div>
       <button id="auth-submit" class="btn btn-primary btn-block" type="button">ログイン</button>
       <p id="auth-msg" class="err"></p>
-      <p class="ver">version 2026-09-11 / <span id="ver-mode"></span></p>
+      <p class="ver">version <span id="ver-num"></span> / <span id="ver-mode"></span></p>
     </div>
   </div>
 </div>
@@ -617,6 +617,7 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
         <ul id="rec-today-list" class="rec-list"></ul>
         <p id="rec-today-empty" class="muted">まだ記録がありません。</p>
       </div>
+      <p class="ver" id="app-ver"></p>
     </section>
 
     <!-- ===== 書斎 ===== -->
@@ -815,7 +816,8 @@ const SUPABASE_ANON = "ここに公開キー";</pre>
         </div>
       </div>
     </div>
-    <p class="muted" style="margin-bottom:.9rem">一度決めた目標は、翌日以降もそのまま引き継がれます。使わないほうは空欄のままで構いません。両方に入れると、どちらも達成したときに緑になります。</p>
+    <p class="muted" style="margin-bottom:.9rem">一度決めた目標は、翌日以降もそのまま引き継がれます。使わないほうは空欄のままで構いません。</p>
+    <p class="muted" style="margin-bottom:.9rem">色の目安　どちらも未達＝赤　／　どちらか一方を達成＝黄緑　／　両方を達成＝緑（片方だけ設定した場合は、達成で緑）</p>
     <button id="goal-modal-save" class="btn btn-primary btn-block" type="button">目標を決める</button>
     <button id="goal-modal-clear" class="btn btn-ghost btn-block" type="button" style="margin-top:.5rem">目標を取り消す</button>
     <p id="goal-modal-msg" class="err"></p>
@@ -919,6 +921,7 @@ const SUPABASE_URL  = "https://tstbqfkwnpntabdmksfm.supabase.co";
 const SUPABASE_ANON = "sb_publishable_26nApeSSefrof6QEa0YIhA_vZ6fYqtr";
 /* ===================================================================== */
 
+const APP_VERSION = "2026-09-11 c";   // 画面の下に表示。端末に新しい版が届いたか確認できます
 const MASTER_EMAIL = "michihari.natori.note@gmail.com";
 const CATEGORIES = ["小説","紀行文","哲学","論文","詩","俳句"];
 
@@ -955,7 +958,12 @@ if ("serviceWorker" in navigator && location.protocol === "https:") {
   });
   // 裏で新しい版が届いたら、小さく知らせる
   navigator.serviceWorker.addEventListener("message", e => {
-    if (e.data && e.data.type === "updated") showUpdateToast();
+    if (!(e.data && e.data.type === "updated")) return;
+    const a = document.activeElement;
+    const typing = a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA");
+    const modalOpen = document.querySelectorAll(".modal-back:not(.hidden)").length > 0;
+    if (typing || modalOpen) showUpdateToast();   // 操作中は邪魔せず、知らせるだけ
+    else location.reload();                       // それ以外は自動で新しい版へ
   });
 }
 function showUpdateToast(){
@@ -1057,6 +1065,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_")) { $("setup-screen").classList.remove("hidden"); return; }
   const standalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
   $("ver-mode").textContent = standalone ? "アプリ表示" : "ブラウザ表示";
+  $("ver-num").textContent = APP_VERSION;
+  $("app-ver").textContent = "version " + APP_VERSION;
   sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
   bindAuth(); bindApp();
   const { data:{ session } } = await sb.auth.getSession();
@@ -1474,14 +1484,20 @@ async function loadWorks(){
   if (!$("page-works").classList.contains("hidden")) await renderWorksList();
 }
 function fillWorkSelects(){
-  const opts = works.map(w => {
+  const label = w => {
     const done = (w.status||"執筆中") === "完成";
     return `<option value="${w.id}">${esc(w.name)}（${esc(w.category)}${done?"・完成":""}）</option>`;
-  }).join("");
-  $("rec-work").innerHTML = `<option value="">— 作品を選択 —</option>` + opts;
-  const cur = $("cm-filter").value;
-  $("cm-filter").innerHTML = `<option value="">すべての作品</option>` + opts;
-  if (cur) $("cm-filter").value = cur;
+  };
+  // 記録する作品の選択には、完成した作品を出さない
+  const curRec = $("rec-work").value;
+  const active = works.filter(w => (w.status||"執筆中") !== "完成");
+  $("rec-work").innerHTML = `<option value="">— 作品を選択 —</option>` + active.map(label).join("");
+  if (curRec && active.some(w => w.id === curRec)) $("rec-work").value = curRec;
+
+  // コメントの絞り込みは、完成した作品のコメントも見られるよう全作品を出す
+  const curCm = $("cm-filter").value;
+  $("cm-filter").innerHTML = `<option value="">すべての作品</option>` + works.map(label).join("");
+  if (curCm) $("cm-filter").value = curCm;
   updateAmountLabel();
 }
 function calcDiff(startEl, endEl){

@@ -1,7 +1,7 @@
 /* 執筆帖 — サービスワーカー
    起動を速くするため、画面の部品は手元の控えから即座に出し、
    裏で新しい版を取りに行きます。新しい版が届いたら画面に知らせます。 */
-const CACHE = "shippitsucho-v2";
+const CACHE = "shippitsucho-v3";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-180.png"];
 
 self.addEventListener("install", e => {
